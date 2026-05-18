@@ -392,7 +392,7 @@ function recolectarEntradas() {
   document.querySelectorAll('.entrada').forEach(el => {
     const ot = el.querySelector('.ot').value.trim();
     const maquina = el.querySelector('.maquina').value.trim();
-    const hs = el.querySelector('.hs').value.trim();
+    const hs = el.querySelector('.hs').value.trim().replace(',', '.');
     const motivo = el.querySelector('.motivo').value.trim();
     if (maquina || hs) {
       entradas.push({ ot, maquina, horas: hs, motivo });
