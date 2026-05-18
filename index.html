@@ -150,7 +150,10 @@
   .row-2col { display: flex; gap: 10px; }
   .row-2col > div { flex: 1; }
   .row-2col .col-hs { flex: 0 0 35%; }
-
+  .row-3col { display: flex; gap: 10px; }
+  .row-3col > div { flex: 1; }
+  .row-3col .col-ot { flex: 0 0 38%; }
+  .row-3col .col-hs { flex: 1; }
   .btn-agregar {
     width: calc(100% - 32px);
     margin: 16px;
@@ -271,8 +274,12 @@
   <button class="btn-agregar" onclick="agregarEntrada()">+ AGREGAR OTRA MÁQUINA</button>
 
   <div class="total-block">
-    <span class="total-label">Total del día</span>
+    <span class="total-label">Total trabajadas</span>
     <span class="total-valor" id="total-valor">0,00 hs</span>
+  </div>
+  <div class="total-block" style="margin-top: 0;">
+    <span class="total-label">Total viaje</span>
+    <span class="total-valor" id="total-viaje">0,00 hs</span>
   </div>
 
   <div id="mensaje" class="mensaje"></div>
@@ -310,14 +317,18 @@ function agregarEntrada() {
       <span class="entrada-num">Trabajo #<span class="num-text">${cont.children.length + 1}</span></span>
       <button class="btn-eliminar" onclick="eliminarEntrada(${id})" title="Eliminar">×</button>
     </div>
-    <div class="entrada-fila row-2col">
-      <div>
+    <div class="entrada-fila row-3col">
+      <div class="col-ot">
         <label>N° OT</label>
         <input type="text" class="ot" inputmode="numeric" autocomplete="off">
       </div>
       <div class="col-hs">
-        <label>Horas</label>
+        <label>Hs trab.</label>
         <input type="text" class="hs" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off">
+      </div>
+      <div class="col-hs">
+        <label>Hs viaje</label>
+        <input type="text" class="viaje" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off">
       </div>
     </div>
     <div class="entrada-fila">
@@ -327,6 +338,10 @@ function agregarEntrada() {
     <div class="entrada-fila">
       <label>Motivo del cambio (opcional)</label>
       <input type="text" class="motivo" placeholder="ej: falta de repuestos" autocomplete="off">
+    </div>
+    <div class="entrada-fila">
+      <label>Observaciones (opcional)</label>
+      <input type="text" class="observaciones" placeholder="ej: cliente avisó tarde" autocomplete="off">
     </div>
   `;
   cont.appendChild(div);
@@ -369,11 +384,14 @@ function fmtHoras(n) {
 }
 
 function actualizarTotal() {
-  let total = 0;
-  document.querySelectorAll('.entrada .hs').forEach(inp => {
-    total += parseHoras(inp.value);
+  let totalTrab = 0;
+  let totalViaje = 0;
+  document.querySelectorAll('.entrada').forEach(el => {
+    totalTrab += parseHoras(el.querySelector('.hs').value);
+    totalViaje += parseHoras(el.querySelector('.viaje').value);
   });
-  document.getElementById('total-valor').textContent = fmtHoras(total) + ' hs';
+  document.getElementById('total-valor').textContent = fmtHoras(totalTrab) + ' hs';
+  document.getElementById('total-viaje').textContent = fmtHoras(totalViaje) + ' hs';
 }
 
 function mostrarMensaje(texto, tipo, duracion = 5000) {
@@ -393,9 +411,11 @@ function recolectarEntradas() {
     const ot = el.querySelector('.ot').value.trim();
     const maquina = el.querySelector('.maquina').value.trim();
     const hs = el.querySelector('.hs').value.trim().replace(',', '.');
+    const viaje = el.querySelector('.viaje').value.trim().replace(',', '.');
     const motivo = el.querySelector('.motivo').value.trim();
-    if (maquina || hs) {
-      entradas.push({ ot, maquina, horas: hs, motivo });
+    const observaciones = el.querySelector('.observaciones').value.trim();
+    if (maquina || hs || viaje) {
+      entradas.push({ ot, maquina, horas: hs, viaje, motivo, observaciones });
     }
   });
   return { nombre, fecha, entradas };
