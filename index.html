@@ -579,12 +579,51 @@ function actualizarEstadoBar() {
 
 // Intentar enviar un solo envio. Devuelve true si se considera entregado, false si fallo.
 // Intentar enviar un envio. Devuelve true SOLO si se verifica que llego al Sheets.
+// Intentar enviar un envio. Devuelve true SOLO si se verifica que llego al Sheets.
 function enviarUno(envio) {
   return new Promise(async (resolve) => {
     if (!navigator.onLine) {
       resolve(false);
       return;
     }
+    // Paso 1: mandar con sendBeacon (resiste cierre de app)
+    const blob = new Blob([JSON.stringify(envio)], { type: 'text/plain' });
+    let enviado = false;
+    try { enviado = navigator.sendBeacon(URL_SCRIPT, blob); } catch(e) {}
+    if (!enviado) {
+      // Si sendBeacon fallo, probar fetch como backup
+      try {
+        await fetch(URL_SCRIPT, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify(envio),
+          keepalive: true
+        });
+      } catch(e) {
+        resolve(false);
+        return;
+      }
+    }
+    // Paso 2: esperar 5 segundos para dar tiempo a que Apps Script procese
+    await new Promise(r => setTimeout(r, 5000));
+    // Paso 3: verificar si el envio efectivamente llego al Sheets
+    try {
+      const urlVerif = URL_SCRIPT + '?verificar=' + encodeURIComponent(envio.idEnvio);
+      const respuesta = await fetch(urlVerif);
+      const texto = await respuesta.text();
+      if (texto.trim() === 'OK') {
+        resolve(true);  // confirmado, salir de la cola
+      } else {
+        resolve(false); // no llego, mantener en cola para reintentar
+      }
+    } catch(err) {
+      // Si la verificacion fallo (sin conexion, etc), asumir que no llego
+      resolve(false);
+    }
+  });
+}
+
 async function reintentarCola() {
   if (reintentoEnCurso) return;
   if (!navigator.onLine) {
@@ -606,139 +645,6 @@ async function reintentarCola() {
   reintentoEnCurso = false;
   actualizarEstadoBar();
 }
-    // Paso 1: mandar con sendBeacon (resiste cierre de app)
-    const blob = new Blob([JSON.stringify(envio)], { type: 'text/plain' });
-    let enviado = false;
-    try { enviado = navigator.sendBeacon(URL_SCRIPT, blob); } catch(e) {}
-
-    if (!enviado) {
-      // Si sendBeacon fallo, probar fetch como backup
-      try {
-        await fetch(URL_SCRIPT, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify(envio),
-          keepalive: true
-        });
-      } catch(e) {
-        resolve(false);
-        return;
-      }
-    }
-
-    // Paso 2: esperar 5 segundos para dar tiempo a que Apps Script procese
-    await new Promise(r => setTimeout(r, 5000));
-
-    // Paso 3: verificar si el envio efectivamente llego al Sheets
-    try {
-      const urlVerif = URL_SCRIPT + '?verificar=' + encodeURIComponent(envio.idEnvio);
-      const respuesta = await fetch(urlVerif);
-      const texto = await respuesta.text();
-      if (texto.trim() === 'OK') {
-        resolve(true);  // confirmado, salir de la cola
-      } else {
-        resolve(false); // no llego, mantener en cola para reintentar
-      }
-    } catch(err) {
-      // Si la verificacion fallo (sin conexion, etc), asumir que no llego
-      resolve(false);
-    }
-  });
-}
-
-// ============ GUARDAR PRINCIPAL ============
-
-function guardar() {
-  const datos = recolectarEntradas();
-
-  if (!datos.nombre) {
-    alert('Por favor, escribí tu nombre antes de guardar.');
-    document.getElementById('nombre').focus();
-    return;
-  }
-  if (!datos.fecha) {
-    alert('Por favor, completá la fecha antes de guardar.');
-    return;
-  }
-  if (datos.entradas.length === 0) {
-    alert('Cargá al menos un trabajo con máquina y horas antes de guardar.');
-    return;
-  }
-
-  if (URL_SCRIPT === "PEGAR_ACA_LA_URL_DEL_APPS_SCRIPT") {
-    alert('⚠️ ATENCIÓN: el administrador todavía no configuró esta app.\n\nFalta pegar la URL del Apps Script.');
-    return;
-  }
-
-  // Guardar nombre en el celular
-  try { localStorage.setItem('mecanicoNombre', datos.nombre); } catch(e){}
-
-  // Crear envio con ID unico
-  const envio = {
-    idEnvio: generarId(),
-    nombre: datos.nombre,
-    fecha: datos.fecha,
-    entradas: datos.entradas,
-    timestamp: new Date().toISOString()
-  };
-
-  // Agregar a la cola
-  const cola = leerCola();
-  cola.push(envio);
-  guardarCola(cola);
-
-  // Bloquear boton 5 segundos
-  const btn = document.getElementById('btn-guardar');
-  btn.disabled = true;
-  setTimeout(() => { btn.disabled = false; }, 5000);
-
-  // Mostrar mensaje segun conexion
-  if (navigator.onLine) {
-    mostrarMensaje('✓ Datos guardados correctamente', 'exito', 5000);
-  } else {
-    mostrarMensaje('📵 Sin conexión. Se enviará automáticamente cuando vuelva la señal.', 'advertencia', 5000);
-  }
-
-  // Limpiar formulario (mantener nombre)
-  limpiarEntradasSilencioso();
-
-  // Intentar enviar la cola (incluye este envio)
-  reintentarCola().then(() => {
-    actualizarEstadoBar();
-  });
-
-  actualizarEstadoBar();
-
-  // Si hay Background Sync, registrarlo para reintentar despues
-  if ('serviceWorker' in navigator && 'SyncManager' in window) {
-    navigator.serviceWorker.ready.then(reg => {
-      reg.sync.register('enviar-pendientes').catch(() => {});
-    });
-  }
-}
-
-function limpiarEntradasSilencioso() {
-  document.getElementById('entradas').innerHTML = '';
-  contadorEntradas = 0;
-  for (let i = 0; i < ENTRADAS_DEFAULT; i++) agregarEntrada();
-  document.getElementById('fecha').value = hoyISO();
-  actualizarTotal();
-}
-
-function limpiarTodo() {
-  if (!confirm('¿Limpiar el formulario? Se borrarán todos los datos cargados.')) return;
-  limpiarEntradasSilencioso();
-}
-
-function hoyISO() {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
 // ============ EVENTOS DE CONEXION ============
 
 window.addEventListener('online', () => {
