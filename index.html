@@ -12,141 +12,33 @@
 <title>Mis Horas - Taller</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background: #f0f0f0;
-    color: #000;
-    font-size: 16px;
-  }
-  .container {
-    max-width: 600px;
-    margin: 0 auto;
-    background: #fff;
-    min-height: 100vh;
-    padding-bottom: 100px;
-  }
-
-  header {
-    background: #000;
-    color: #FFC800;
-    padding: 18px 16px;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 0; background: #f0f0f0; color: #000; font-size: 16px; }
+  .container { max-width: 600px; margin: 0 auto; background: #fff; min-height: 100vh; padding-bottom: 100px; }
+  header { background: #000; color: #FFC800; padding: 18px 16px; position: sticky; top: 0; z-index: 10; }
   header h1 { margin: 0; font-size: 20px; font-weight: bold; color: #FFC800; }
   header .subtitle { font-size: 13px; opacity: 0.85; margin-top: 2px; color: #fff; }
-
-  /* Barra de estado pendientes */
-  .estado-bar {
-    padding: 10px 16px;
-    background: #fff8d6;
-    border-bottom: 2px solid #FFC800;
-    display: none;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    font-size: 14px;
-    font-weight: bold;
-  }
+  .estado-bar { padding: 10px 16px; background: #fff8d6; border-bottom: 2px solid #FFC800; display: none; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; font-weight: bold; }
   .estado-bar.visible { display: flex; }
   .estado-bar .estado-texto { flex: 1; }
-  .estado-bar .btn-reintentar {
-    padding: 8px 14px;
-    background: #000;
-    color: #FFC800;
-    border: none;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 13px;
-  }
+  .estado-bar .btn-reintentar { padding: 8px 14px; background: #000; color: #FFC800; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px; }
   .estado-bar .btn-reintentar:active { background: #333; }
-  .estado-bar.sin-conexion {
-    background: #ffe0e0;
-    border-bottom-color: #c00;
-  }
-
-  .field-block {
-    padding: 14px 16px;
-    border-bottom: 1px solid #ddd;
-  }
-  .field-block label {
-    display: block;
-    font-weight: bold;
-    font-size: 13px;
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    color: #444;
-  }
-  .field-block input[type="text"],
-  .field-block input[type="date"] {
-    width: 100%;
-    padding: 14px 12px;
-    font-size: 17px;
-    border: 2px solid #000;
-    border-radius: 4px;
-    background: #fff;
-    color: #000;
-  }
+  .estado-bar.sin-conexion { background: #ffe0e0; border-bottom-color: #c00; }
+  .field-block { padding: 14px 16px; border-bottom: 1px solid #ddd; }
+  .field-block label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 6px; text-transform: uppercase; color: #444; }
+  .field-block input[type="text"], .field-block input[type="date"] { width: 100%; padding: 14px 12px; font-size: 17px; border: 2px solid #000; border-radius: 4px; background: #fff; color: #000; }
   .field-block input:focus { outline: none; border-color: #FFC800; }
-
-  .entradas-header {
-    background: #f8f8f8;
-    padding: 14px 16px;
-    font-weight: bold;
-    font-size: 15px;
-    text-transform: uppercase;
-    border-bottom: 2px solid #000;
-  }
-  .entrada {
-    padding: 14px 16px;
-    border-bottom: 1px solid #ddd;
-  }
-  .entrada-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-  }
+  .entradas-header { background: #f8f8f8; padding: 14px 16px; font-weight: bold; font-size: 15px; text-transform: uppercase; border-bottom: 2px solid #000; }
+  .entrada { padding: 14px 16px; border-bottom: 1px solid #ddd; }
+  .entrada-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
   .entrada-num { font-weight: bold; font-size: 16px; }
-  .btn-eliminar {
-    background: #fff;
-    border: 2px solid #c00;
-    color: #c00;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    font-size: 20px;
-    font-weight: bold;
-    cursor: pointer;
-    line-height: 1;
-    padding: 0;
-  }
+  .btn-eliminar { background: #fff; border: 2px solid #c00; color: #c00; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; font-weight: bold; cursor: pointer; line-height: 1; padding: 0; }
   .btn-eliminar:active { background: #c00; color: #fff; }
   .entrada-fila { margin-bottom: 10px; }
   .entrada-fila:last-child { margin-bottom: 0; }
-  .entrada-fila label {
-    display: block;
-    font-size: 12px;
-    font-weight: bold;
-    color: #444;
-    margin-bottom: 4px;
-    text-transform: uppercase;
-  }
-  .entrada-fila input {
-    width: 100%;
-    padding: 12px 10px;
-    font-size: 16px;
-    border: 1.5px solid #999;
-    border-radius: 4px;
-    background: #fff;
-  }
+  .entrada-fila label { display: block; font-size: 12px; font-weight: bold; color: #444; margin-bottom: 4px; text-transform: uppercase; }
+  .entrada-fila input { width: 100%; padding: 12px 10px; font-size: 16px; border: 1.5px solid #999; border-radius: 4px; background: #fff; }
   .entrada-fila input:focus { outline: none; border-color: #FFC800; }
   .entrada-fila input.hs { font-weight: bold; }
-
   .row-2col { display: flex; gap: 10px; }
   .row-2col > div { flex: 1; }
   .row-2col .col-hs { flex: 0 0 35%; }
@@ -154,151 +46,52 @@
   .row-3col > div { flex: 1; }
   .row-3col .col-ot { flex: 0 0 38%; }
   .row-3col .col-hs { flex: 1; }
- .tipo-selector {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 12px;
-  }
-  .tipo-btn {
-    flex: 1;
-    padding: 10px 4px;
-    font-size: 13px;
-    font-weight: bold;
-    border: 2px solid #000;
-    background: #fff;
-    color: #000;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  .tipo-btn.activo {
-    background: #000;
-    color: #FFC800;
-  }
-  .entrada .campos-taller,
-  .entrada .campos-campo,
-  .entrada .campos-mant { display: none; }
+  .tipo-selector { display: flex; gap: 6px; margin-bottom: 12px; }
+  .tipo-btn { flex: 1; padding: 10px 4px; font-size: 13px; font-weight: bold; border: 2px solid #000; background: #fff; color: #000; border-radius: 4px; cursor: pointer; }
+  .tipo-btn.activo { background: #000; color: #FFC800; }
+  .entrada .campos-taller, .entrada .campos-campo, .entrada .campos-mant { display: none; }
   .entrada[data-tipo="Taller"] .campos-taller { display: block; }
   .entrada[data-tipo="Campo"] .campos-campo { display: block; }
   .entrada[data-tipo="Mantenimiento"] .campos-mant { display: block; }
-  .btn-agregar {
-    width: calc(100% - 32px);
-    margin: 16px;
-    padding: 16px;
-    font-size: 16px;
-    font-weight: bold;
-    border: 2px dashed #000;
-    background: #fff;
-    color: #000;
-    border-radius: 6px;
-    cursor: pointer;
-  }
+  .btn-agregar { width: calc(100% - 32px); margin: 16px; padding: 16px; font-size: 16px; font-weight: bold; border: 2px dashed #000; background: #fff; color: #000; border-radius: 6px; cursor: pointer; }
   .btn-agregar:active { background: #f0f0f0; }
-
-  .total-block {
-    padding: 18px 16px;
-    background: #fafafa;
-    border-top: 2px solid #000;
-    border-bottom: 2px solid #000;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 8px;
-  }
+  .total-block { padding: 18px 16px; background: #fafafa; border-top: 2px solid #000; border-bottom: 2px solid #000; display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
   .total-block .total-label { font-size: 16px; font-weight: bold; text-transform: uppercase; }
   .total-block .total-valor { font-size: 26px; font-weight: bold; }
-
-  .actions {
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .btn-enviar {
-    width: 100%;
-    padding: 18px;
-    font-size: 18px;
-    font-weight: bold;
-    border: none;
-    background: #000;
-    color: #FFC800;
-    border-radius: 8px;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  }
+  .actions { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .btn-enviar { width: 100%; padding: 18px; font-size: 18px; font-weight: bold; border: none; background: #000; color: #FFC800; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
   .btn-enviar:active { background: #333; }
   .btn-enviar:disabled { background: #888; color: #ddd; cursor: not-allowed; box-shadow: none; }
-  .btn-limpiar {
-    width: 100%;
-    padding: 14px;
-    font-size: 15px;
-    font-weight: bold;
-    border: 2px solid #000;
-    background: #fff;
-    color: #000;
-    border-radius: 8px;
-    cursor: pointer;
-  }
+  .btn-limpiar { width: 100%; padding: 14px; font-size: 15px; font-weight: bold; border: 2px solid #000; background: #fff; color: #000; border-radius: 8px; cursor: pointer; }
   .btn-limpiar:active { background: #f0f0f0; }
-
-  .mensaje {
-    margin: 16px;
-    padding: 14px 16px;
-    border-radius: 6px;
-    font-size: 15px;
-    font-weight: bold;
-    text-align: center;
-    display: none;
-  }
-  .mensaje.exito {
-    background: #d4edda;
-    color: #155724;
-    border: 2px solid #155724;
-    display: block;
-  }
-  .mensaje.advertencia {
-    background: #fff3cd;
-    color: #856404;
-    border: 2px solid #856404;
-    display: block;
-  }
-  .mensaje.error {
-    background: #f8d7da;
-    color: #721c24;
-    border: 2px solid #721c24;
-    display: block;
-  }
+  .mensaje { margin: 16px; padding: 14px 16px; border-radius: 6px; font-size: 15px; font-weight: bold; text-align: center; display: none; }
+  .mensaje.exito { background: #d4edda; color: #155724; border: 2px solid #155724; display: block; }
+  .mensaje.advertencia { background: #fff3cd; color: #856404; border: 2px solid #856404; display: block; }
+  .mensaje.error { background: #f8d7da; color: #721c24; border: 2px solid #721c24; display: block; }
 </style>
 </head>
 <body>
 
 <div class="container">
-
   <header>
     <h1>🔧 MIS HORAS</h1>
     <div class="subtitle">Control de horas trabajadas</div>
   </header>
-
-  <!-- Barra de estado pendientes / sin conexion -->
   <div class="estado-bar" id="estado-bar">
     <span class="estado-texto" id="estado-texto"></span>
     <button class="btn-reintentar" id="btn-reintentar" onclick="reintentarCola()">Reintentar</button>
   </div>
-
   <div class="field-block">
     <label>Mi nombre</label>
     <input type="text" id="nombre" placeholder="Escribí tu nombre" autocomplete="off">
   </div>
-
   <div class="field-block">
     <label>Fecha del trabajo</label>
     <input type="date" id="fecha">
   </div>
-
   <div class="entradas-header">Trabajos del día</div>
   <div id="entradas"></div>
-
   <button class="btn-agregar" onclick="agregarEntrada()">+ AGREGAR OTRA MÁQUINA</button>
-
   <div class="total-block">
     <span class="total-label">Total trabajadas</span>
     <span class="total-valor" id="total-valor">0,00 hs</span>
@@ -307,29 +100,19 @@
     <span class="total-label">Total viaje</span>
     <span class="total-valor" id="total-viaje">0,00 hs</span>
   </div>
-
   <div id="mensaje" class="mensaje"></div>
-
   <div class="actions">
     <button class="btn-enviar" id="btn-guardar" onclick="guardar()">💾 GUARDAR</button>
     <button class="btn-limpiar" onclick="limpiarTodo()">Limpiar formulario</button>
   </div>
-
 </div>
 
 <script>
-// ====================================================
-// CONFIGURACIÓN: pegar acá la URL del Apps Script
-// ====================================================
 const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzc5DpW4GspsOiUaAzE-crvjxMMAtoleUKefh76Olh5M48SeJGvWHlVgYGazQOZ8tVJFw/exec";
-// ====================================================
-
 const ENTRADAS_DEFAULT = 3;
 const COLA_KEY = 'mhcola_v1';
 let contadorEntradas = 0;
 let reintentoEnCurso = false;
-
-// ============ ENTRADAS DEL FORMULARIO ============
 
 function agregarEntrada() {
   contadorEntradas++;
@@ -338,7 +121,7 @@ function agregarEntrada() {
   const div = document.createElement('div');
   div.className = 'entrada';
   div.dataset.id = id;
-div.innerHTML = `
+  div.innerHTML = `
     <div class="entrada-header">
       <span class="entrada-num">Trabajo #<span class="num-text">${cont.children.length + 1}</span></span>
       <button class="btn-eliminar" onclick="eliminarEntrada(${id})" title="Eliminar">×</button>
@@ -348,73 +131,28 @@ div.innerHTML = `
       <button type="button" class="tipo-btn" data-tipo="Campo" onclick="cambiarTipo(${id}, 'Campo')">Campo</button>
       <button type="button" class="tipo-btn" data-tipo="Mantenimiento" onclick="cambiarTipo(${id}, 'Mantenimiento')">Mantenimiento</button>
     </div>
-
-    <!-- CAMPOS PARA TALLER -->
     <div class="campos-taller">
       <div class="entrada-fila row-2col">
-        <div>
-          <label>N° OT</label>
-          <input type="text" class="ot ot-taller" inputmode="numeric" autocomplete="off">
-        </div>
-        <div class="col-hs">
-          <label>Hs trab.</label>
-          <input type="text" class="hs hs-taller" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off">
-        </div>
+        <div><label>N° OT</label><input type="text" class="ot-taller" inputmode="numeric" autocomplete="off"></div>
+        <div class="col-hs"><label>Hs trab.</label><input type="text" class="hs hs-taller" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off"></div>
       </div>
-      <div class="entrada-fila">
-        <label>Máquina</label>
-        <input type="text" class="maquina maquina-taller" placeholder="ej: Tractor JD 6110" autocomplete="off">
-      </div>
-      <div class="entrada-fila">
-        <label>Motivo del cambio (opcional)</label>
-        <input type="text" class="motivo motivo-taller" placeholder="ej: falta de repuestos" autocomplete="off">
-      </div>
-      <div class="entrada-fila">
-        <label>Observaciones (opcional)</label>
-        <input type="text" class="observaciones observaciones-taller" autocomplete="off">
-      </div>
+      <div class="entrada-fila"><label>Máquina</label><input type="text" class="maquina-taller" placeholder="ej: Tractor JD 6110" autocomplete="off"></div>
+      <div class="entrada-fila"><label>Motivo del cambio (opcional)</label><input type="text" class="motivo-taller" placeholder="ej: falta de repuestos" autocomplete="off"></div>
+      <div class="entrada-fila"><label>Observaciones (opcional)</label><input type="text" class="observaciones-taller" autocomplete="off"></div>
     </div>
-
-    <!-- CAMPOS PARA CAMPO -->
     <div class="campos-campo">
       <div class="entrada-fila row-3col">
-        <div class="col-ot">
-          <label>N° OT</label>
-          <input type="text" class="ot ot-campo" inputmode="numeric" autocomplete="off">
-        </div>
-        <div class="col-hs">
-          <label>Hs trab.</label>
-          <input type="text" class="hs hs-campo" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off">
-        </div>
-        <div class="col-hs">
-          <label>Hs viaje</label>
-          <input type="text" class="viaje viaje-campo" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off">
-        </div>
+        <div class="col-ot"><label>N° OT</label><input type="text" class="ot-campo" inputmode="numeric" autocomplete="off"></div>
+        <div class="col-hs"><label>Hs trab.</label><input type="text" class="hs hs-campo" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off"></div>
+        <div class="col-hs"><label>Hs viaje</label><input type="text" class="viaje-campo" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off"></div>
       </div>
-      <div class="entrada-fila">
-        <label>Máquina</label>
-        <input type="text" class="maquina maquina-campo" placeholder="ej: Tractor JD 6110" autocomplete="off">
-      </div>
-      <div class="entrada-fila">
-        <label>Motivo del cambio (opcional)</label>
-        <input type="text" class="motivo motivo-campo" autocomplete="off">
-      </div>
-      <div class="entrada-fila">
-        <label>Observaciones (opcional)</label>
-        <input type="text" class="observaciones observaciones-campo" autocomplete="off">
-      </div>
+      <div class="entrada-fila"><label>Máquina</label><input type="text" class="maquina-campo" placeholder="ej: Tractor JD 6110" autocomplete="off"></div>
+      <div class="entrada-fila"><label>Motivo del cambio (opcional)</label><input type="text" class="motivo-campo" autocomplete="off"></div>
+      <div class="entrada-fila"><label>Observaciones (opcional)</label><input type="text" class="observaciones-campo" autocomplete="off"></div>
     </div>
-
-    <!-- CAMPOS PARA MANTENIMIENTO -->
     <div class="campos-mant">
-      <div class="entrada-fila">
-        <label>Hs trab.</label>
-        <input type="text" class="hs hs-mant" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off">
-      </div>
-      <div class="entrada-fila">
-        <label>Descripción</label>
-        <input type="text" class="observaciones observaciones-mant" placeholder="ej: limpieza del taller" autocomplete="off">
-      </div>
+      <div class="entrada-fila"><label>Hs trab.</label><input type="text" class="hs hs-mant" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off"></div>
+      <div class="entrada-fila"><label>Descripción</label><input type="text" class="observaciones-mant" placeholder="ej: limpieza del taller" autocomplete="off"></div>
     </div>
   `;
   div.dataset.tipo = 'Taller';
@@ -423,11 +161,12 @@ div.innerHTML = `
   if (cont.children.length > ENTRADAS_DEFAULT) {
     div.scrollIntoView({ behavior: 'smooth', block: 'center' });
     setTimeout(() => {
-       const inp = div.querySelector('.ot-taller');
+      const inp = div.querySelector('.ot-taller');
       if (inp) inp.focus();
     }, 300);
   }
 }
+
 function cambiarTipo(idEntrada, nuevoTipo) {
   const div = document.querySelector(`.entrada[data-id="${idEntrada}"]`);
   if (!div) return;
@@ -437,12 +176,10 @@ function cambiarTipo(idEntrada, nuevoTipo) {
   });
   actualizarTotal();
 }
+
 function eliminarEntrada(id) {
   const entradas = document.querySelectorAll('.entrada');
-  if (entradas.length <= 1) {
-    alert('Tiene que quedar al menos un trabajo.');
-    return;
-  }
+  if (entradas.length <= 1) { alert('Tiene que quedar al menos un trabajo.'); return; }
   const el = document.querySelector(`.entrada[data-id="${id}"]`);
   if (el) el.remove();
   renumerar();
@@ -499,7 +236,6 @@ function recolectarEntradas() {
   document.querySelectorAll('.entrada').forEach(el => {
     const tipo = el.dataset.tipo || 'Taller';
     let ot = '', maquina = '', hs = '', viaje = '', motivo = '', observaciones = '';
-
     if (tipo === 'Taller') {
       ot = el.querySelector('.ot-taller').value.trim();
       maquina = el.querySelector('.maquina-taller').value.trim();
@@ -516,10 +252,7 @@ function recolectarEntradas() {
     } else if (tipo === 'Mantenimiento') {
       hs = el.querySelector('.hs-mant').value.trim().replace(',', '.');
       observaciones = el.querySelector('.observaciones-mant').value.trim();
-      // En mantenimiento, descripcion (observaciones) es obligatoria
     }
-
-    // Validar si la entrada tiene algo cargado
     if (tipo === 'Mantenimiento') {
       if (hs && observaciones) {
         entradas.push({ tipo, ot, maquina, horas: hs, viaje, motivo, observaciones });
@@ -532,12 +265,9 @@ function recolectarEntradas() {
   });
   return { nombre, fecha, entradas };
 }
-// ============ COLA DE ENVIOS PENDIENTES ============
 
 function leerCola() {
-  try {
-    return JSON.parse(localStorage.getItem(COLA_KEY) || '[]');
-  } catch(e) { return []; }
+  try { return JSON.parse(localStorage.getItem(COLA_KEY) || '[]'); } catch(e) { return []; }
 }
 
 function guardarCola(cola) {
@@ -545,7 +275,6 @@ function guardarCola(cola) {
 }
 
 function generarId() {
-  // ID unico: timestamp + random
   return Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 9);
 }
 
@@ -554,9 +283,7 @@ function actualizarEstadoBar() {
   const bar = document.getElementById('estado-bar');
   const texto = document.getElementById('estado-texto');
   const btn = document.getElementById('btn-reintentar');
-
   const sinConexion = !navigator.onLine;
-
   if (cola.length > 0) {
     bar.classList.add('visible');
     if (sinConexion) {
@@ -577,59 +304,34 @@ function actualizarEstadoBar() {
   }
 }
 
-// Intentar enviar un solo envio. Devuelve true si se considera entregado, false si fallo.
-// Intentar enviar un envio. Devuelve true SOLO si se verifica que llego al Sheets.
-// Intentar enviar un envio. Devuelve true SOLO si se verifica que llego al Sheets.
 function enviarUno(envio) {
   return new Promise(async (resolve) => {
-    if (!navigator.onLine) {
-      resolve(false);
-      return;
-    }
-    // Paso 1: mandar con sendBeacon (resiste cierre de app)
+    if (!navigator.onLine) { resolve(false); return; }
     const blob = new Blob([JSON.stringify(envio)], { type: 'text/plain' });
     let enviado = false;
     try { enviado = navigator.sendBeacon(URL_SCRIPT, blob); } catch(e) {}
     if (!enviado) {
-      // Si sendBeacon fallo, probar fetch como backup
       try {
         await fetch(URL_SCRIPT, {
-          method: 'POST',
-          mode: 'no-cors',
+          method: 'POST', mode: 'no-cors',
           headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify(envio),
-          keepalive: true
+          body: JSON.stringify(envio), keepalive: true
         });
-      } catch(e) {
-        resolve(false);
-        return;
-      }
+      } catch(e) { resolve(false); return; }
     }
-    // Paso 2: esperar 5 segundos para dar tiempo a que Apps Script procese
     await new Promise(r => setTimeout(r, 5000));
-    // Paso 3: verificar si el envio efectivamente llego al Sheets
     try {
       const urlVerif = URL_SCRIPT + '?verificar=' + encodeURIComponent(envio.idEnvio);
       const respuesta = await fetch(urlVerif);
       const texto = await respuesta.text();
-      if (texto.trim() === 'OK') {
-        resolve(true);  // confirmado, salir de la cola
-      } else {
-        resolve(false); // no llego, mantener en cola para reintentar
-      }
-    } catch(err) {
-      // Si la verificacion fallo (sin conexion, etc), asumir que no llego
-      resolve(false);
-    }
+      if (texto.trim() === 'OK') { resolve(true); } else { resolve(false); }
+    } catch(err) { resolve(false); }
   });
 }
 
 async function reintentarCola() {
   if (reintentoEnCurso) return;
-  if (!navigator.onLine) {
-    actualizarEstadoBar();
-    return;
-  }
+  if (!navigator.onLine) { actualizarEstadoBar(); return; }
   reintentoEnCurso = true;
   let cola = leerCola();
   const aReintentar = [...cola];
@@ -638,69 +340,96 @@ async function reintentarCola() {
     if (ok) {
       cola = leerCola().filter(e => e.idEnvio !== envio.idEnvio);
       guardarCola(cola);
-    } else {
-      break;
-    }
+    } else { break; }
   }
   reintentoEnCurso = false;
   actualizarEstadoBar();
 }
-// ============ EVENTOS DE CONEXION ============
 
-window.addEventListener('online', () => {
-  actualizarEstadoBar();
-  reintentarCola();
-});
-window.addEventListener('offline', actualizarEstadoBar);
-
-// Cuando la app vuelve al foco
-window.addEventListener('focus', () => {
-  reintentarCola();
-  actualizarEstadoBar();
-});
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
-    reintentarCola();
-    actualizarEstadoBar();
+function guardar() {
+  const datos = recolectarEntradas();
+  if (!datos.nombre) { alert('Por favor, escribí tu nombre antes de guardar.'); document.getElementById('nombre').focus(); return; }
+  if (!datos.fecha) { alert('Por favor, completá la fecha antes de guardar.'); return; }
+  if (datos.entradas.length === 0) { alert('Cargá al menos un trabajo con máquina y horas antes de guardar.'); return; }
+  try { localStorage.setItem('mecanicoNombre', datos.nombre); } catch(e){}
+  const envio = {
+    idEnvio: generarId(),
+    nombre: datos.nombre,
+    fecha: datos.fecha,
+    entradas: datos.entradas,
+    timestamp: new Date().toISOString()
+  };
+  const cola = leerCola();
+  cola.push(envio);
+  guardarCola(cola);
+  const btn = document.getElementById('btn-guardar');
+  btn.disabled = true;
+  setTimeout(() => { btn.disabled = false; }, 5000);
+  if (navigator.onLine) {
+    mostrarMensaje('✓ Datos guardados correctamente', 'exito', 5000);
+  } else {
+    mostrarMensaje('📵 Sin conexión. Se enviará automáticamente cuando vuelva la señal.', 'advertencia', 5000);
   }
+  limpiarEntradasSilencioso();
+  reintentarCola().then(() => { actualizarEstadoBar(); });
+  actualizarEstadoBar();
+  if ('serviceWorker' in navigator && 'SyncManager' in window) {
+    navigator.serviceWorker.ready.then(reg => {
+      reg.sync.register('enviar-pendientes').catch(() => {});
+    });
+  }
+}
+
+function limpiarEntradasSilencioso() {
+  document.getElementById('entradas').innerHTML = '';
+  contadorEntradas = 0;
+  for (let i = 0; i < ENTRADAS_DEFAULT; i++) agregarEntrada();
+  document.getElementById('fecha').value = hoyISO();
+  actualizarTotal();
+}
+
+function limpiarTodo() {
+  if (!confirm('¿Limpiar el formulario? Se borrarán todos los datos cargados.')) return;
+  limpiarEntradasSilencioso();
+}
+
+function hoyISO() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+window.addEventListener('online', () => { actualizarEstadoBar(); reintentarCola(); });
+window.addEventListener('offline', actualizarEstadoBar);
+window.addEventListener('focus', () => { reintentarCola(); actualizarEstadoBar(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') { reintentarCola(); actualizarEstadoBar(); }
 });
 
-// Escuchar mensajes del Service Worker (background sync)
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', event => {
-    if (event.data && event.data.tipo === 'reintentar-cola') {
-      reintentarCola();
-    }
+    if (event.data && event.data.tipo === 'reintentar-cola') reintentarCola();
   });
 }
 
-// ============ INICIALIZACION ============
-
 window.addEventListener('DOMContentLoaded', () => {
-  // Registrar Service Worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('service-worker.js').catch(err => {
       console.log('No se pudo registrar el service worker:', err);
     });
   }
-
-  // Crear entradas iniciales
   for (let i = 0; i < ENTRADAS_DEFAULT; i++) agregarEntrada();
   document.getElementById('fecha').value = hoyISO();
-
-  // Recuperar nombre guardado
   try {
     const guardado = localStorage.getItem('mecanicoNombre');
     if (guardado) document.getElementById('nombre').value = guardado;
   } catch(e){}
-
   actualizarTotal();
   actualizarEstadoBar();
-
-  // Intentar vaciar la cola al abrir
   reintentarCola();
 });
 </script>
-
 </body>
 </html>
