@@ -418,18 +418,25 @@ div.innerHTML = `
     </div>
   `;
   div.dataset.tipo = 'Taller';
-  `;
   cont.appendChild(div);
   renumerar();
   if (cont.children.length > ENTRADAS_DEFAULT) {
     div.scrollIntoView({ behavior: 'smooth', block: 'center' });
     setTimeout(() => {
-      const inp = div.querySelector('input.ot');
+       const inp = div.querySelector('.ot-taller');
       if (inp) inp.focus();
     }, 300);
   }
 }
-
+function cambiarTipo(idEntrada, nuevoTipo) {
+  const div = document.querySelector(`.entrada[data-id="${idEntrada}"]`);
+  if (!div) return;
+  div.dataset.tipo = nuevoTipo;
+  div.querySelectorAll('.tipo-btn').forEach(btn => {
+    btn.classList.toggle('activo', btn.dataset.tipo === nuevoTipo);
+  });
+  actualizarTotal();
+}
 function eliminarEntrada(id) {
   const entradas = document.querySelectorAll('.entrada');
   if (entradas.length <= 1) {
