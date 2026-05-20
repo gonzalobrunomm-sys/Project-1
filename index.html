@@ -154,6 +154,32 @@
   .row-3col > div { flex: 1; }
   .row-3col .col-ot { flex: 0 0 38%; }
   .row-3col .col-hs { flex: 1; }
+ .tipo-selector {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .tipo-btn {
+    flex: 1;
+    padding: 10px 4px;
+    font-size: 13px;
+    font-weight: bold;
+    border: 2px solid #000;
+    background: #fff;
+    color: #000;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .tipo-btn.activo {
+    background: #000;
+    color: #FFC800;
+  }
+  .entrada .campos-taller,
+  .entrada .campos-campo,
+  .entrada .campos-mant { display: none; }
+  .entrada[data-tipo="Taller"] .campos-taller { display: block; }
+  .entrada[data-tipo="Campo"] .campos-campo { display: block; }
+  .entrada[data-tipo="Mantenimiento"] .campos-mant { display: block; }
   .btn-agregar {
     width: calc(100% - 32px);
     margin: 16px;
@@ -312,37 +338,86 @@ function agregarEntrada() {
   const div = document.createElement('div');
   div.className = 'entrada';
   div.dataset.id = id;
-  div.innerHTML = `
+div.innerHTML = `
     <div class="entrada-header">
       <span class="entrada-num">Trabajo #<span class="num-text">${cont.children.length + 1}</span></span>
       <button class="btn-eliminar" onclick="eliminarEntrada(${id})" title="Eliminar">×</button>
     </div>
-    <div class="entrada-fila row-3col">
-      <div class="col-ot">
-        <label>N° OT</label>
-        <input type="text" class="ot" inputmode="numeric" autocomplete="off">
+    <div class="tipo-selector">
+      <button type="button" class="tipo-btn activo" data-tipo="Taller" onclick="cambiarTipo(${id}, 'Taller')">Taller</button>
+      <button type="button" class="tipo-btn" data-tipo="Campo" onclick="cambiarTipo(${id}, 'Campo')">Campo</button>
+      <button type="button" class="tipo-btn" data-tipo="Mantenimiento" onclick="cambiarTipo(${id}, 'Mantenimiento')">Mantenimiento</button>
+    </div>
+
+    <!-- CAMPOS PARA TALLER -->
+    <div class="campos-taller">
+      <div class="entrada-fila row-2col">
+        <div>
+          <label>N° OT</label>
+          <input type="text" class="ot ot-taller" inputmode="numeric" autocomplete="off">
+        </div>
+        <div class="col-hs">
+          <label>Hs trab.</label>
+          <input type="text" class="hs hs-taller" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off">
+        </div>
       </div>
-      <div class="col-hs">
+      <div class="entrada-fila">
+        <label>Máquina</label>
+        <input type="text" class="maquina maquina-taller" placeholder="ej: Tractor JD 6110" autocomplete="off">
+      </div>
+      <div class="entrada-fila">
+        <label>Motivo del cambio (opcional)</label>
+        <input type="text" class="motivo motivo-taller" placeholder="ej: falta de repuestos" autocomplete="off">
+      </div>
+      <div class="entrada-fila">
+        <label>Observaciones (opcional)</label>
+        <input type="text" class="observaciones observaciones-taller" autocomplete="off">
+      </div>
+    </div>
+
+    <!-- CAMPOS PARA CAMPO -->
+    <div class="campos-campo">
+      <div class="entrada-fila row-3col">
+        <div class="col-ot">
+          <label>N° OT</label>
+          <input type="text" class="ot ot-campo" inputmode="numeric" autocomplete="off">
+        </div>
+        <div class="col-hs">
+          <label>Hs trab.</label>
+          <input type="text" class="hs hs-campo" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off">
+        </div>
+        <div class="col-hs">
+          <label>Hs viaje</label>
+          <input type="text" class="viaje viaje-campo" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off">
+        </div>
+      </div>
+      <div class="entrada-fila">
+        <label>Máquina</label>
+        <input type="text" class="maquina maquina-campo" placeholder="ej: Tractor JD 6110" autocomplete="off">
+      </div>
+      <div class="entrada-fila">
+        <label>Motivo del cambio (opcional)</label>
+        <input type="text" class="motivo motivo-campo" autocomplete="off">
+      </div>
+      <div class="entrada-fila">
+        <label>Observaciones (opcional)</label>
+        <input type="text" class="observaciones observaciones-campo" autocomplete="off">
+      </div>
+    </div>
+
+    <!-- CAMPOS PARA MANTENIMIENTO -->
+    <div class="campos-mant">
+      <div class="entrada-fila">
         <label>Hs trab.</label>
-        <input type="text" class="hs" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off">
+        <input type="text" class="hs hs-mant" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off">
       </div>
-      <div class="col-hs">
-        <label>Hs viaje</label>
-        <input type="text" class="viaje" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off">
+      <div class="entrada-fila">
+        <label>Descripción</label>
+        <input type="text" class="observaciones observaciones-mant" placeholder="ej: limpieza del taller" autocomplete="off">
       </div>
     </div>
-    <div class="entrada-fila">
-      <label>Máquina</label>
-      <input type="text" class="maquina" placeholder="ej: Tractor JD 6110" autocomplete="off">
-    </div>
-    <div class="entrada-fila">
-      <label>Motivo del cambio (opcional)</label>
-      <input type="text" class="motivo" placeholder="ej: falta de repuestos" autocomplete="off">
-    </div>
-    <div class="entrada-fila">
-      <label>Observaciones (opcional)</label>
-      <input type="text" class="observaciones" placeholder="ej: cliente avisó tarde" autocomplete="off">
-    </div>
+  `;
+  div.dataset.tipo = 'Taller';
   `;
   cont.appendChild(div);
   renumerar();
@@ -387,8 +462,15 @@ function actualizarTotal() {
   let totalTrab = 0;
   let totalViaje = 0;
   document.querySelectorAll('.entrada').forEach(el => {
-    totalTrab += parseHoras(el.querySelector('.hs').value);
-    totalViaje += parseHoras(el.querySelector('.viaje').value);
+    const tipo = el.dataset.tipo || 'Taller';
+    if (tipo === 'Taller') {
+      totalTrab += parseHoras(el.querySelector('.hs-taller').value);
+    } else if (tipo === 'Campo') {
+      totalTrab += parseHoras(el.querySelector('.hs-campo').value);
+      totalViaje += parseHoras(el.querySelector('.viaje-campo').value);
+    } else if (tipo === 'Mantenimiento') {
+      totalTrab += parseHoras(el.querySelector('.hs-mant').value);
+    }
   });
   document.getElementById('total-valor').textContent = fmtHoras(totalTrab) + ' hs';
   document.getElementById('total-viaje').textContent = fmtHoras(totalViaje) + ' hs';
@@ -408,19 +490,41 @@ function recolectarEntradas() {
   const fecha = document.getElementById('fecha').value;
   const entradas = [];
   document.querySelectorAll('.entrada').forEach(el => {
-    const ot = el.querySelector('.ot').value.trim();
-    const maquina = el.querySelector('.maquina').value.trim();
-    const hs = el.querySelector('.hs').value.trim().replace(',', '.');
-    const viaje = el.querySelector('.viaje').value.trim().replace(',', '.');
-    const motivo = el.querySelector('.motivo').value.trim();
-    const observaciones = el.querySelector('.observaciones').value.trim();
-    if (maquina || hs || viaje) {
-      entradas.push({ ot, maquina, horas: hs, viaje, motivo, observaciones });
+    const tipo = el.dataset.tipo || 'Taller';
+    let ot = '', maquina = '', hs = '', viaje = '', motivo = '', observaciones = '';
+
+    if (tipo === 'Taller') {
+      ot = el.querySelector('.ot-taller').value.trim();
+      maquina = el.querySelector('.maquina-taller').value.trim();
+      hs = el.querySelector('.hs-taller').value.trim().replace(',', '.');
+      motivo = el.querySelector('.motivo-taller').value.trim();
+      observaciones = el.querySelector('.observaciones-taller').value.trim();
+    } else if (tipo === 'Campo') {
+      ot = el.querySelector('.ot-campo').value.trim();
+      maquina = el.querySelector('.maquina-campo').value.trim();
+      hs = el.querySelector('.hs-campo').value.trim().replace(',', '.');
+      viaje = el.querySelector('.viaje-campo').value.trim().replace(',', '.');
+      motivo = el.querySelector('.motivo-campo').value.trim();
+      observaciones = el.querySelector('.observaciones-campo').value.trim();
+    } else if (tipo === 'Mantenimiento') {
+      hs = el.querySelector('.hs-mant').value.trim().replace(',', '.');
+      observaciones = el.querySelector('.observaciones-mant').value.trim();
+      // En mantenimiento, descripcion (observaciones) es obligatoria
+    }
+
+    // Validar si la entrada tiene algo cargado
+    if (tipo === 'Mantenimiento') {
+      if (hs && observaciones) {
+        entradas.push({ tipo, ot, maquina, horas: hs, viaje, motivo, observaciones });
+      }
+    } else {
+      if (maquina || hs || viaje) {
+        entradas.push({ tipo, ot, maquina, horas: hs, viaje, motivo, observaciones });
+      }
     }
   });
   return { nombre, fecha, entradas };
 }
-
 // ============ COLA DE ENVIOS PENDIENTES ============
 
 function leerCola() {
