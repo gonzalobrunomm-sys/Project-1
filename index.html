@@ -585,7 +585,27 @@ function enviarUno(envio) {
       resolve(false);
       return;
     }
-
+async function reintentarCola() {
+  if (reintentoEnCurso) return;
+  if (!navigator.onLine) {
+    actualizarEstadoBar();
+    return;
+  }
+  reintentoEnCurso = true;
+  let cola = leerCola();
+  const aReintentar = [...cola];
+  for (const envio of aReintentar) {
+    const ok = await enviarUno(envio);
+    if (ok) {
+      cola = leerCola().filter(e => e.idEnvio !== envio.idEnvio);
+      guardarCola(cola);
+    } else {
+      break;
+    }
+  }
+  reintentoEnCurso = false;
+  actualizarEstadoBar();
+}
     // Paso 1: mandar con sendBeacon (resiste cierre de app)
     const blob = new Blob([JSON.stringify(envio)], { type: 'text/plain' });
     let enviado = false;
