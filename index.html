@@ -467,53 +467,53 @@ function actualizarEstadoBar() {
 }
 
 // Intentar enviar un solo envio. Devuelve true si se considera entregado, false si fallo.
+// Intentar enviar un envio. Devuelve true SOLO si se verifica que llego al Sheets.
 function enviarUno(envio) {
-  return new Promise(resolve => {
+  return new Promise(async (resolve) => {
     if (!navigator.onLine) {
       resolve(false);
       return;
     }
+
+    // Paso 1: mandar con sendBeacon (resiste cierre de app)
     const blob = new Blob([JSON.stringify(envio)], { type: 'text/plain' });
-    // Intento 1: sendBeacon (garantiza entrega incluso al cerrar la app)
     let enviado = false;
     try { enviado = navigator.sendBeacon(URL_SCRIPT, blob); } catch(e) {}
-    if (enviado) {
-      resolve(true);
-      return;
-    }
-    // Intento 2: fetch con keepalive
-    fetch(URL_SCRIPT, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(envio),
-      keepalive: true
-    }).then(() => resolve(true)).catch(() => resolve(false));
-  });
-}
 
-// Reintentar enviar TODOS los pendientes de la cola
-async function reintentarCola() {
-  if (reintentoEnCurso) return;
-  if (!navigator.onLine) {
-    actualizarEstadoBar();
-    return;
-  }
-  reintentoEnCurso = true;
-  let cola = leerCola();
-  const aReintentar = [...cola];
-  for (const envio of aReintentar) {
-    const ok = await enviarUno(envio);
-    if (ok) {
-      // Sacar de la cola
-      cola = leerCola().filter(e => e.idEnvio !== envio.idEnvio);
-      guardarCola(cola);
-    } else {
-      break; // si fallo uno, no sigamos hasta que vuelva la red
+    if (!enviado) {
+      // Si sendBeacon fallo, probar fetch como backup
+      try {
+        await fetch(URL_SCRIPT, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify(envio),
+          keepalive: true
+        });
+      } catch(e) {
+        resolve(false);
+        return;
+      }
     }
-  }
-  reintentoEnCurso = false;
-  actualizarEstadoBar();
+
+    // Paso 2: esperar 5 segundos para dar tiempo a que Apps Script procese
+    await new Promise(r => setTimeout(r, 5000));
+
+    // Paso 3: verificar si el envio efectivamente llego al Sheets
+    try {
+      const urlVerif = URL_SCRIPT + '?verificar=' + encodeURIComponent(envio.idEnvio);
+      const respuesta = await fetch(urlVerif);
+      const texto = await respuesta.text();
+      if (texto.trim() === 'OK') {
+        resolve(true);  // confirmado, salir de la cola
+      } else {
+        resolve(false); // no llego, mantener en cola para reintentar
+      }
+    } catch(err) {
+      // Si la verificacion fallo (sin conexion, etc), asumir que no llego
+      resolve(false);
+    }
+  });
 }
 
 // ============ GUARDAR PRINCIPAL ============
