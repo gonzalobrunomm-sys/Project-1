@@ -438,4 +438,10 @@ window.addEventListener('DOMContentLoaded', () => {
     const guardado = localStorage.getItem('mecanicoNombre');
     if (guardado) document.getElementById('nombre').value = guardado;
   } catch(e){}
-  actualizarTota
+  actualizarTotal();
+  actualizarEstadoBar();
+  reintentarCola();
+});
+</script>
+</body>
+</html>
