@@ -617,8 +617,9 @@
 
 <script>
   /* ── Config ──────────────────────────────────────────── */
-  // ⚠️  Cambiá esta URL por la de tu app publicada en Replit
-  const API_BASE = 'https://TU-APP.replit.app';
+  // ⚠️  Completá con los datos de tu proyecto en Supabase
+  const SUPABASE_URL  = 'https://TU-PROYECTO.supabase.co';
+  const SUPABASE_ANON = 'TU-ANON-KEY';
 
   const TIPOS = ['Taller', 'Campo', 'Mantenimiento', 'Capacitacion'];
   const TIPO_LABELS = ['Taller', 'Campo', 'Mant.', 'Capac.'];
@@ -886,13 +887,33 @@
   }
 
   async function enviarPayload(payload) {
-    const res = await fetch(API_BASE + '/api/registros', {
+    const rows = payload.entradas.map(e => ({
+      id_envio:      payload.idEnvio,
+      mecanico:      payload.nombre,
+      fecha:         payload.fecha,
+      tipo:          e.tipo,
+      ot:            e.ot            || null,
+      maquina:       e.maquina       || null,
+      hs_trabajo:    e.hs_trabajo,
+      hs_viaje:      e.hs_viaje      || 0,
+      motivo:        e.motivo        || null,
+      observaciones: e.observaciones || null,
+    }));
+
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/registros`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      headers: {
+        'Content-Type':  'application/json',
+        'apikey':        SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Prefer':        'return=minimal',
+      },
+      body: JSON.stringify(rows),
     });
-    if (!res.ok) throw new Error('Error ' + res.status);
-    return res.json();
+    if (!res.ok) {
+      const detail = await res.text().catch(() => '');
+      throw new Error(`Error ${res.status}: ${detail}`);
+    }
   }
 
   /* ── Cola offline ────────────────────────────────────── */
