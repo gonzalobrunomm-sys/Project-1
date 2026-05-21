@@ -1,7 +1,7 @@
 // Service Worker - Mis Horas Taller
 // Maneja cache offline de la app y reintenta envios pendientes en background
 
-const CACHE_NAME = 'mis-horas-v6';
+const CACHE_NAME = 'mis-horas-v7';
 const ARCHIVOS_CACHE = [
   './',
   './index.html',
