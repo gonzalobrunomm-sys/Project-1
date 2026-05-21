@@ -1,4 +1,765 @@
-electorAll('.campo-taller').forEach(el => {
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0f172a" id="meta-theme">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>TallerApp</title>
+  <style>
+    /* ── Variables de tema ─────────────────────────────── */
+    :root {
+      --bg-body:         #020617;
+      --bg-card:         #0f172a;
+      --bg-input:        #020617;
+      --bg-tipo:         #020617;
+      --bg-tipo-hover:   rgba(30,41,59,0.5);
+      --border:          #1e293b;
+      --border-input:    #334155;
+      --text-primary:    #e2e8f0;
+      --text-secondary:  #94a3b8;
+      --text-label:      #64748b;
+      --accent:          #10b981;
+      --accent-dim:      rgba(16,185,129,0.15);
+      --accent-text:     #020617;
+      --tipo-active-bg:  #10b981;
+      --tipo-active-txt: #020617;
+      --tipo-inact-txt:  #94a3b8;
+      --header-bg:       #0f172a;
+      --header-border:   #1e293b;
+      --header-txt:      #10b981;
+      --footer-bg:       rgba(15,23,42,0.96);
+      --footer-border:   #1e293b;
+      --totals-bg:       #020617;
+      --card-stripe:     #10b981;
+      --btn-limpiar-bg:  #1e293b;
+      --btn-limpiar-txt: #94a3b8;
+      --btn-limpiar-hov: #334155;
+      --btn-guardar-bg:  #10b981;
+      --btn-guardar-txt: #020617;
+      --btn-guardar-hov: #34d399;
+      --btn-agregar-brd: #334155;
+      --btn-agregar-txt: #10b981;
+      --estado-ok-bg:    rgba(16,185,129,0.1);
+      --estado-ok-txt:   #34d399;
+      --estado-err-bg:   rgba(239,68,68,0.1);
+      --estado-err-txt:  #f87171;
+      --delete-txt:      #64748b;
+      --delete-hov:      #f87171;
+      --focus-ring:      #10b981;
+      --shadow-card:     0 1px 3px rgba(0,0,0,0.4);
+      --shadow-footer:   0 -4px 20px rgba(0,0,0,0.4);
+    }
+
+    html.light {
+      --bg-body:         #f0f0f0;
+      --bg-card:         #ffffff;
+      --bg-input:        #ffffff;
+      --bg-tipo:         #f1f5f9;
+      --bg-tipo-hover:   #e2e8f0;
+      --border:          #e2e8f0;
+      --border-input:    #cbd5e1;
+      --text-primary:    #1e293b;
+      --text-secondary:  #475569;
+      --text-label:      #64748b;
+      --accent:          #000000;
+      --accent-dim:      rgba(0,0,0,0.06);
+      --accent-text:     #FFC800;
+      --tipo-active-bg:  #000000;
+      --tipo-active-txt: #FFC800;
+      --tipo-inact-txt:  #475569;
+      --header-bg:       #000000;
+      --header-border:   #000000;
+      --header-txt:      #FFC800;
+      --footer-bg:       rgba(255,255,255,0.97);
+      --footer-border:   #e2e8f0;
+      --totals-bg:       #f8fafc;
+      --card-stripe:     #000000;
+      --btn-limpiar-bg:  #f1f5f9;
+      --btn-limpiar-txt: #475569;
+      --btn-limpiar-hov: #e2e8f0;
+      --btn-guardar-bg:  #000000;
+      --btn-guardar-txt: #FFC800;
+      --btn-guardar-hov: #1e293b;
+      --btn-agregar-brd: #cbd5e1;
+      --btn-agregar-txt: #475569;
+      --estado-ok-bg:    #f0fdf4;
+      --estado-ok-txt:   #16a34a;
+      --estado-err-bg:   #fef2f2;
+      --estado-err-txt:  #dc2626;
+      --delete-txt:      #94a3b8;
+      --delete-hov:      #dc2626;
+      --focus-ring:      #FFC800;
+      --shadow-card:     0 1px 3px rgba(0,0,0,0.08);
+      --shadow-footer:   0 -4px 20px rgba(0,0,0,0.08);
+    }
+
+    /* ── Reset ─────────────────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0; padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg-body);
+      color: var(--text-primary);
+      font-size: 16px;
+      min-height: 100dvh;
+      transition: background 0.25s, color 0.25s;
+    }
+
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 148px;
+    }
+
+    /* ── Barra de estado ───────────────────────────────── */
+    #estado-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--estado-err-bg);
+      color: var(--estado-err-txt);
+      border-bottom: 1px solid currentColor;
+    }
+    #estado-bar.visible { display: flex; }
+    #estado-bar.ok {
+      background: var(--estado-ok-bg);
+      color: var(--estado-ok-txt);
+    }
+    #estado-bar .estado-texto { flex: 1; }
+    #btn-reintentar {
+      padding: 6px 12px;
+      background: var(--accent);
+      color: var(--accent-text);
+      border: none;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* ── Header ────────────────────────────────────────── */
+    header {
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--header-border);
+      padding: 14px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.25s;
+    }
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent-dim);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .header-logo-icon svg { width: 20px; height: 20px; color: var(--accent); fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    html.light .header-logo-icon svg { stroke: var(--header-txt); }
+    html.light .header-logo-icon { background: rgba(255,200,0,0.15); }
+    .header-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--header-txt);
+      letter-spacing: -0.3px;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-label);
+      background: var(--accent-dim);
+      padding: 3px 8px;
+      border-radius: 20px;
+    }
+    #btn-tema {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--border-input);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    #btn-tema:active { opacity: 0.7; }
+    #btn-tema svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── Main ──────────────────────────────────────────── */
+    main {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ── Cards generales ───────────────────────────────── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: var(--shadow-card);
+      transition: background 0.25s, border-color 0.25s;
+    }
+
+    .field-group { display: flex; flex-direction: column; gap: 6px; }
+    .field-group + .field-group { margin-top: 14px; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-label);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      padding: 12px 12px;
+      font-size: 16px;
+      background: var(--bg-input);
+      border: 1.5px solid var(--border-input);
+      border-radius: 8px;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      font-family: inherit;
+      -webkit-appearance: none;
+    }
+    input:focus, textarea:focus {
+      border-color: var(--focus-ring);
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+    }
+    html.light input:focus, html.light textarea:focus {
+      box-shadow: 0 0 0 3px rgba(255,200,0,0.2);
+    }
+    textarea { resize: none; min-height: 70px; }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.5); cursor: pointer; }
+    html.light input[type="date"]::-webkit-calendar-picker-indicator { filter: none; }
+
+    /* ── Sección entradas ──────────────────────────────── */
+    .entradas-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-label);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .entradas-count {
+      background: var(--accent-dim);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px;
+    }
+    html.light .entradas-count { color: var(--text-secondary); background: var(--border); }
+
+    /* ── Card entrada ──────────────────────────────────── */
+    .entrada {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+      position: relative;
+      transition: background 0.25s, border-color 0.25s;
+    }
+    .entrada-stripe {
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px; height: 100%;
+      background: var(--card-stripe);
+      border-radius: 12px 0 0 12px;
+    }
+    .entrada-inner {
+      padding: 14px 14px 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .entrada-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .entrada-num {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .btn-eliminar {
+      width: 32px; height: 32px;
+      background: none;
+      border: 1px solid var(--border-input);
+      border-radius: 8px;
+      color: var(--delete-txt);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-eliminar:hover { color: var(--delete-hov); border-color: var(--delete-hov); background: rgba(239,68,68,0.05); }
+    .btn-eliminar svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* Selector de tipo */
+    .tipo-selector {
+      display: flex;
+      background: var(--bg-tipo);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .tipo-btn {
+      flex: 1;
+      padding: 8px 4px;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--tipo-inact-txt);
+      background: transparent;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .tipo-btn:hover { background: var(--bg-tipo-hover); color: var(--text-primary); }
+    .tipo-btn.activo {
+      background: var(--tipo-active-bg);
+      color: var(--tipo-active-txt);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    /* Grid 2 col */
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .row-3 { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+
+    /* Campo Hs viaje (solo visible si tipo=Campo) */
+    .hs-viaje-field { display: none; }
+    .hs-viaje-field.visible { display: block; }
+
+    /* Campos ocultos para Mantenimiento y Capacitacion */
+    .campo-taller { display: block; }
+    .campo-taller.oculto { display: none; }
+
+    /* Btn agregar */
+    #btn-agregar {
+      width: 100%;
+      padding: 14px;
+      background: transparent;
+      border: 2px dashed var(--btn-agregar-brd);
+      border-radius: 12px;
+      color: var(--btn-agregar-txt);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    #btn-agregar:hover {
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    html.light #btn-agregar:hover { color: var(--text-primary); border-color: #94a3b8; background: #f8fafc; }
+    #btn-agregar svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; }
+
+    /* ── Footer fijo ───────────────────────────────────── */
+    footer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--footer-bg);
+      border-top: 1px solid var(--footer-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 12px 16px 16px;
+      z-index: 20;
+      box-shadow: var(--shadow-footer);
+      transition: background 0.25s;
+    }
+    .footer-inner {
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .totales {
+      display: flex;
+      align-items: center;
+      background: var(--totals-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .total-item {
+      flex: 1;
+      padding: 8px 14px;
+      display: flex;
+      flex-direction: column;
+    }
+    .total-item:first-child { border-right: 1px solid var(--border); }
+    .total-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-label);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .total-valor {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+    .total-valor.accent { color: var(--accent); }
+    html.light .total-valor.accent { color: var(--text-primary); }
+    .footer-btns { display: flex; gap: 10px; }
+    #btn-limpiar {
+      padding: 14px 16px;
+      background: var(--btn-limpiar-bg);
+      color: var(--btn-limpiar-txt);
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    #btn-limpiar:hover { background: var(--btn-limpiar-hov); }
+    #btn-limpiar svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    #btn-guardar {
+      flex: 1;
+      padding: 14px;
+      background: var(--btn-guardar-bg);
+      color: var(--btn-guardar-txt);
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(16,185,129,0.25);
+      transition: background 0.15s, transform 0.1s;
+    }
+    html.light #btn-guardar { box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
+    #btn-guardar:hover { background: var(--btn-guardar-hov); }
+    #btn-guardar:active { transform: scale(0.98); }
+    #btn-guardar:disabled { opacity: 0.5; cursor: default; transform: none; }
+    #btn-guardar svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── Toast ─────────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 160px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 99;
+      max-width: calc(100vw - 32px);
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    #toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    #toast.ok { background: #064e3b; color: #6ee7b7; }
+    #toast.error { background: #7f1d1d; color: #fca5a5; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Estado offline -->
+    <div id="estado-bar">
+      <span class="estado-texto" id="estado-texto">Sin conexión — los datos se guardarán y enviarán al reconectar</span>
+      <button id="btn-reintentar" onclick="reintentarEnvio()">Reintentar</button>
+    </div>
+
+    <!-- Header -->
+    <header>
+      <div class="header-logo">
+        <div class="header-logo-icon">
+          <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        </div>
+        <span class="header-title">TallerApp</span>
+      </div>
+      <div class="header-right">
+        <span class="header-badge" id="cola-badge" style="display:none"></span>
+        <button id="btn-tema" onclick="toggleTema()" title="Cambiar modo">
+          <!-- ícono sol (modo claro) -->
+          <svg id="icon-tema-sol" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <!-- ícono luna (modo oscuro) -->
+          <svg id="icon-tema-luna" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main>
+      <!-- Datos generales -->
+      <div class="card">
+        <div class="field-group">
+          <label for="nombre">Mi Nombre</label>
+          <input type="text" id="nombre" placeholder="Ingresá tu nombre" autocomplete="name" oninput="guardarNombre()">
+        </div>
+        <div class="field-group">
+          <label for="fecha">Fecha del trabajo</label>
+          <input type="date" id="fecha">
+        </div>
+      </div>
+
+      <!-- Entradas -->
+      <div class="entradas-header">
+        Trabajos del día
+        <span class="entradas-count" id="entradas-count">0</span>
+      </div>
+
+      <div id="lista-entradas"></div>
+
+      <button id="btn-agregar" onclick="agregarEntrada()">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        AGREGAR OTRA MÁQUINA
+      </button>
+    </main>
+  </div>
+
+  <!-- Footer fijo -->
+  <footer>
+    <div class="footer-inner">
+      <div class="totales">
+        <div class="total-item">
+          <span class="total-label">Total viaje</span>
+          <span class="total-valor" id="total-viaje">0,0 hs</span>
+        </div>
+        <div class="total-item" style="align-items:flex-end">
+          <span class="total-label">Total trabajadas</span>
+          <span class="total-valor accent" id="total-trab">0,0 hs</span>
+        </div>
+      </div>
+      <div class="footer-btns">
+        <button id="btn-limpiar" onclick="limpiarFormulario()">
+          <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+          Limpiar
+        </button>
+        <button id="btn-guardar" onclick="guardar()">
+          <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          GUARDAR
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast -->
+  <div id="toast"></div>
+
+<script>
+  /* ── Config ──────────────────────────────────────────── */
+  // ⚠️  Cambiá esta URL por la de tu app publicada en Replit
+  const API_BASE = 'https://TU-APP.replit.app';
+
+  const TIPOS = ['Taller', 'Campo', 'Mantenimiento', 'Capacitacion'];
+  const TIPO_LABELS = ['Taller', 'Campo', 'Mant.', 'Capac.'];
+  const COLA_KEY = 'taller_cola_envios';
+  const NOMBRE_KEY = 'taller_nombre';
+  const TEMA_KEY = 'taller_tema';
+
+  let contadorEntrada = 0;
+
+  /* ── Tema ────────────────────────────────────────────── */
+  function toggleTema() {
+    const esClaro = document.documentElement.classList.toggle('light');
+    localStorage.setItem(TEMA_KEY, esClaro ? 'light' : 'dark');
+    actualizarIconoTema(esClaro);
+    document.getElementById('meta-theme').setAttribute('content', esClaro ? '#ffffff' : '#0f172a');
+  }
+
+  function actualizarIconoTema(esClaro) {
+    document.getElementById('icon-tema-sol').style.display  = esClaro ? 'block' : 'none';
+    document.getElementById('icon-tema-luna').style.display = esClaro ? 'none'  : 'block';
+  }
+
+  function cargarTema() {
+    const guardado = localStorage.getItem(TEMA_KEY);
+    const esClaro = guardado === 'light';
+    if (esClaro) document.documentElement.classList.add('light');
+    actualizarIconoTema(esClaro);
+    document.getElementById('meta-theme').setAttribute('content', esClaro ? '#ffffff' : '#0f172a');
+  }
+
+  /* ── Nombre ──────────────────────────────────────────── */
+  function guardarNombre() {
+    localStorage.setItem(NOMBRE_KEY, document.getElementById('nombre').value);
+  }
+
+  /* ── Fecha ───────────────────────────────────────────── */
+  function hoyISO() {
+    const d = new Date();
+    return d.toISOString().slice(0, 10);
+  }
+
+  /* ── Entradas ────────────────────────────────────────── */
+  function agregarEntrada() {
+    contadorEntrada++;
+    const id = 'entrada-' + contadorEntrada;
+    const lista = document.getElementById('lista-entradas');
+
+    const div = document.createElement('div');
+    div.className = 'entrada';
+    div.id = id;
+    div.dataset.tipo = 'Taller';
+
+    div.innerHTML = `
+      <div class="entrada-stripe"></div>
+      <div class="entrada-inner">
+        <div class="entrada-top">
+          <span class="entrada-num">Entrada <strong>${contadorEntrada}</strong></span>
+          <button class="btn-eliminar" onclick="eliminarEntrada('${id}')" title="Eliminar">
+            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </div>
+        <div class="tipo-selector">
+          ${TIPOS.map((t, i) => `
+            <button class="tipo-btn${i === 0 ? ' activo' : ''}"
+              onclick="seleccionarTipo('${id}', '${t}', this)">
+              ${TIPO_LABELS[i]}
+            </button>
+          `).join('')}
+        </div>
+        <div class="row-3 campo-taller" data-ot-row>
+          <div class="field-group">
+            <label>N° OT</label>
+            <input type="text" class="ot" placeholder="Ej: 1234" inputmode="numeric">
+          </div>
+          <div class="field-group">
+            <label>Hs. Trab.</label>
+            <input type="number" class="hs-trab" step="0.5" min="0" placeholder="0" inputmode="decimal" oninput="actualizarTotales()">
+          </div>
+        </div>
+        <div class="field-group" data-hs-simple style="display:none">
+          <label>Hs. Trab.</label>
+          <input type="number" class="hs-trab-simple" step="0.5" min="0" placeholder="0" inputmode="decimal" oninput="sincronizarHs(this)">
+        </div>
+        <div class="field-group hs-viaje-field" data-campo-field>
+          <label>Hs. Viaje</label>
+          <input type="number" class="hs-viaje" step="0.5" min="0" placeholder="0" inputmode="decimal" oninput="actualizarTotales()">
+        </div>
+        <div class="field-group campo-taller" data-maquina-row>
+          <label>Máquina</label>
+          <input type="text" class="maquina" placeholder="Ej: Tractor JD 6110">
+        </div>
+        <div class="field-group campo-taller" data-motivo-row>
+          <label>Motivo del cambio (opcional)</label>
+          <input type="text" class="motivo" placeholder="Falta de repuestos">
+        </div>
+        <div class="field-group">
+          <label>Observaciones (opcional)</label>
+          <textarea class="observaciones" rows="2" placeholder="Detalles extra..."></textarea>
+        </div>
+      </div>
+    `;
+
+    lista.appendChild(div);
+    actualizarConteo();
+    actualizarTotales();
+    renumerarEntradas();
+  }
+
+  function eliminarEntrada(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+    actualizarConteo();
+    actualizarTotales();
+    renumerarEntradas();
+  }
+
+  const TIPO_SIMPLE = ['Mantenimiento', 'Capacitacion'];
+  const OBS_PLACEHOLDER = {
+    Taller:        'Detalles extra...',
+    Campo:         'Detalles extra...',
+    Mantenimiento: 'Ej: Limpieza del taller',
+    Capacitacion:  'Ej: Cursos o reuniones',
+  };
+
+  function sincronizarHs(input) {
+    const entrada = input.closest('.entrada');
+    const hsTrab = entrada.querySelector('.hs-trab');
+    if (hsTrab) hsTrab.value = input.value;
+    actualizarTotales();
+  }
+
+  function seleccionarTipo(entradaId, tipo, btn) {
+    const entrada = document.getElementById(entradaId);
+    entrada.dataset.tipo = tipo;
+    entrada.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('activo'));
+    btn.classList.add('activo');
+
+    const esSimple = TIPO_SIMPLE.includes(tipo);
+
+    // Campos exclusivos de Taller/Campo
+    entrada.querySelectorAll('.campo-taller').forEach(el => {
       el.classList.toggle('oculto', esSimple);
     });
 
