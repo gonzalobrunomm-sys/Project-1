@@ -960,6 +960,35 @@
   actualizarEstado();
   agregarEntrada();
 
+  /* ── Chequeo de versión (auto-actualización) ─────────── */
+  const VERSION_ACTUAL = '2';
+  const VERSION_KEY = 'taller_version';
+
+  async function chequearVersion() {
+    if (!navigator.onLine) return;
+    try {
+      const res = await fetch('./version.txt?t=' + Date.now());
+      if (!res.ok) return;
+      const versionServidor = (await res.text()).trim();
+      const versionGuardada = localStorage.getItem(VERSION_KEY);
+      if (versionGuardada && versionGuardada !== versionServidor) {
+        // Hay versión nueva — limpiar cache y recargar
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }
+        localStorage.setItem(VERSION_KEY, versionServidor);
+        window.location.reload(true);
+        return;
+      }
+      localStorage.setItem(VERSION_KEY, versionServidor);
+    } catch (e) {}
+  }
+
+  // Chequear al abrir y cada 5 minutos
+  chequearVersion();
+  setInterval(chequearVersion, 5 * 60 * 1000);
+
   /* ── Service Worker ──────────────────────────────────── */
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(reg => {
