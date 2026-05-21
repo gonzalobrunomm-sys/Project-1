@@ -109,9 +109,8 @@
 </div>
 
 <script>
-// ⚠️ CAMBIAR ESTA URL por el dominio de producción después de publicar en Replit
-// Ejemplo: "https://mi-taller.replit.app"
-const URL_API = "https://119ab0c3-1d76-4b77-941a-facc341951fe-00-33wena1i7jlmq.janeway.replit.dev";
+const SUPABASE_URL = "https://wgemrgxlvmakccznlerd.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZW1yZ3hsdm1ha2Njem5sZXJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNDUyNTgsImV4cCI6MjA5NDkyMTI1OH0.ArZLkZ0Rm079BBfIVOXMMNEf3np46PfmB2DAmMB4G0c";
 
 const ENTRADAS_DEFAULT = 3;
 const COLA_KEY = 'mhcola_v1';
@@ -268,13 +267,9 @@ function recolectarEntradas() {
       observaciones = el.querySelector('.observaciones-cap').value.trim();
     }
     if (tipo === 'Mantenimiento' || tipo === 'Capacitacion') {
-      if (hs) {
-        entradas.push({ tipo, ot, maquina, horas: hs, viaje, motivo, observaciones });
-      }
+      if (hs) entradas.push({ tipo, ot, maquina, horas: hs, viaje, motivo, observaciones });
     } else {
-      if (maquina || hs || viaje) {
-        entradas.push({ tipo, ot, maquina, horas: hs, viaje, motivo, observaciones });
-      }
+      if (maquina || hs || viaje) entradas.push({ tipo, ot, maquina, horas: hs, viaje, motivo, observaciones });
     }
   });
   return { nombre, fecha, entradas };
@@ -321,22 +316,33 @@ function actualizarEstadoBar() {
 function enviarUno(envio) {
   return new Promise(async (resolve) => {
     if (!navigator.onLine) { resolve(false); return; }
+    const rows = envio.entradas.map(e => ({
+      id: crypto.randomUUID(),
+      id_envio: envio.idEnvio,
+      mecanico: envio.nombre,
+      fecha: envio.fecha,
+      tipo: e.tipo,
+      ot: e.ot || null,
+      maquina: e.maquina || null,
+      hs_trabajo: parseFloat(e.horas) || 0,
+      hs_viaje: parseFloat(e.viaje) || 0,
+      motivo: e.motivo || null,
+      observaciones: e.observaciones || null,
+    }));
     try {
-      const respuesta = await fetch(URL_API + '/api/registros', {
+      const respuesta = await fetch(SUPABASE_URL + '/rest/v1/registros', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(envio),
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(rows),
         keepalive: true
       });
-      if (respuesta.ok) { resolve(true); return; }
-    } catch(e) {}
-    // Si el POST falló, verificar si llegó igual (por si hubo timeout de red)
-    try {
-      const urlVerif = URL_API + '/api/verificar?id=' + encodeURIComponent(envio.idEnvio);
-      const respVerif = await fetch(urlVerif);
-      const json = await respVerif.json();
-      resolve(json.estado === 'OK');
-    } catch(err) { resolve(false); }
+      resolve(respuesta.ok);
+    } catch(e) { resolve(false); }
   });
 }
 
@@ -384,11 +390,6 @@ function guardar() {
   limpiarEntradasSilencioso();
   reintentarCola().then(() => { actualizarEstadoBar(); });
   actualizarEstadoBar();
-  if ('serviceWorker' in navigator && 'SyncManager' in window) {
-    navigator.serviceWorker.ready.then(reg => {
-      reg.sync.register('enviar-pendientes').catch(() => {});
-    });
-  }
 }
 
 function limpiarEntradasSilencioso() {
@@ -437,10 +438,4 @@ window.addEventListener('DOMContentLoaded', () => {
     const guardado = localStorage.getItem('mecanicoNombre');
     if (guardado) document.getElementById('nombre').value = guardado;
   } catch(e){}
-  actualizarTotal();
-  actualizarEstadoBar();
-  reintentarCola();
-});
-</script>
-</body>
-</html>
+  actualizarTota
