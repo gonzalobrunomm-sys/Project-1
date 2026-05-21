@@ -1,447 +1,969 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#000000">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
-<title>Mis Horas - Taller</title>
-<style>
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 0; background: #f0f0f0; color: #000; font-size: 16px; }
-  .container { max-width: 600px; margin: 0 auto; background: #fff; min-height: 100vh; padding-bottom: 100px; }
-  header { background: #000; color: #FFC800; padding: 18px 16px; position: sticky; top: 0; z-index: 10; }
-  header h1 { margin: 0; font-size: 20px; font-weight: bold; color: #FFC800; }
-  header .subtitle { font-size: 13px; opacity: 0.85; margin-top: 2px; color: #fff; }
-  .estado-bar { padding: 10px 16px; background: #fff8d6; border-bottom: 2px solid #FFC800; display: none; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; font-weight: bold; }
-  .estado-bar.visible { display: flex; }
-  .estado-bar .estado-texto { flex: 1; }
-  .estado-bar .btn-reintentar { padding: 8px 14px; background: #000; color: #FFC800; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px; }
-  .estado-bar .btn-reintentar:active { background: #333; }
-  .estado-bar.sin-conexion { background: #ffe0e0; border-bottom-color: #c00; }
-  .field-block { padding: 14px 16px; border-bottom: 1px solid #ddd; }
-  .field-block label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 6px; text-transform: uppercase; color: #444; }
-  .field-block input[type="text"], .field-block input[type="date"] { width: 100%; padding: 14px 12px; font-size: 17px; border: 2px solid #000; border-radius: 4px; background: #fff; color: #000; }
-  .field-block input:focus { outline: none; border-color: #FFC800; }
-  .entradas-header { background: #f8f8f8; padding: 14px 16px; font-weight: bold; font-size: 15px; text-transform: uppercase; border-bottom: 2px solid #000; }
-  .entrada { padding: 14px 16px; border-bottom: 1px solid #ddd; }
-  .entrada-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .entrada-num { font-weight: bold; font-size: 16px; }
-  .btn-eliminar { background: #fff; border: 2px solid #c00; color: #c00; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; font-weight: bold; cursor: pointer; line-height: 1; padding: 0; }
-  .btn-eliminar:active { background: #c00; color: #fff; }
-  .entrada-fila { margin-bottom: 10px; }
-  .entrada-fila:last-child { margin-bottom: 0; }
-  .entrada-fila label { display: block; font-size: 12px; font-weight: bold; color: #444; margin-bottom: 4px; text-transform: uppercase; }
-  .entrada-fila input { width: 100%; padding: 12px 10px; font-size: 16px; border: 1.5px solid #999; border-radius: 4px; background: #fff; }
-  .entrada-fila input:focus { outline: none; border-color: #FFC800; }
-  .entrada-fila input.hs { font-weight: bold; }
-  .row-2col { display: flex; gap: 10px; }
-  .row-2col > div { flex: 1; }
-  .row-2col .col-hs { flex: 0 0 35%; }
-  .row-3col { display: flex; gap: 10px; }
-  .row-3col > div { flex: 1; }
-  .row-3col .col-ot { flex: 0 0 38%; }
-  .row-3col .col-hs { flex: 1; }
-  .tipo-selector { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-  .tipo-btn { flex: 1; min-width: 70px; padding: 10px 4px; font-size: 13px; font-weight: bold; border: 2px solid #000; background: #fff; color: #000; border-radius: 4px; cursor: pointer; }
-  .tipo-btn.activo { background: #000; color: #FFC800; }
-  .entrada .campos-taller, .entrada .campos-campo, .entrada .campos-mant, .entrada .campos-cap { display: none; }
-  .entrada[data-tipo="Taller"] .campos-taller { display: block; }
-  .entrada[data-tipo="Campo"] .campos-campo { display: block; }
-  .entrada[data-tipo="Mantenimiento"] .campos-mant { display: block; }
-  .entrada[data-tipo="Capacitacion"] .campos-cap { display: block; }
-  .btn-agregar { width: calc(100% - 32px); margin: 16px; padding: 16px; font-size: 16px; font-weight: bold; border: 2px dashed #000; background: #fff; color: #000; border-radius: 6px; cursor: pointer; }
-  .btn-agregar:active { background: #f0f0f0; }
-  .total-block { padding: 18px 16px; background: #fafafa; border-top: 2px solid #000; border-bottom: 2px solid #000; display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
-  .total-block .total-label { font-size: 16px; font-weight: bold; text-transform: uppercase; }
-  .total-block .total-valor { font-size: 26px; font-weight: bold; }
-  .actions { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-  .btn-enviar { width: 100%; padding: 18px; font-size: 18px; font-weight: bold; border: none; background: #000; color: #FFC800; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-  .btn-enviar:active { background: #333; }
-  .btn-enviar:disabled { background: #888; color: #ddd; cursor: not-allowed; box-shadow: none; }
-  .btn-limpiar { width: 100%; padding: 14px; font-size: 15px; font-weight: bold; border: 2px solid #000; background: #fff; color: #000; border-radius: 8px; cursor: pointer; }
-  .btn-limpiar:active { background: #f0f0f0; }
-  .mensaje { margin: 16px; padding: 14px 16px; border-radius: 6px; font-size: 15px; font-weight: bold; text-align: center; display: none; }
-  .mensaje.exito { background: #d4edda; color: #155724; border: 2px solid #155724; display: block; }
-  .mensaje.advertencia { background: #fff3cd; color: #856404; border: 2px solid #856404; display: block; }
-  .mensaje.error { background: #f8d7da; color: #721c24; border: 2px solid #721c24; display: block; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0f172a" id="meta-theme">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>TallerApp</title>
+  <style>
+    /* ── Variables de tema ─────────────────────────────── */
+    :root {
+      --bg-body:         #020617;
+      --bg-card:         #0f172a;
+      --bg-input:        #020617;
+      --bg-tipo:         #020617;
+      --bg-tipo-hover:   rgba(30,41,59,0.5);
+      --border:          #1e293b;
+      --border-input:    #334155;
+      --text-primary:    #e2e8f0;
+      --text-secondary:  #94a3b8;
+      --text-label:      #64748b;
+      --accent:          #10b981;
+      --accent-dim:      rgba(16,185,129,0.15);
+      --accent-text:     #020617;
+      --tipo-active-bg:  #10b981;
+      --tipo-active-txt: #020617;
+      --tipo-inact-txt:  #94a3b8;
+      --header-bg:       #0f172a;
+      --header-border:   #1e293b;
+      --header-txt:      #10b981;
+      --footer-bg:       rgba(15,23,42,0.96);
+      --footer-border:   #1e293b;
+      --totals-bg:       #020617;
+      --card-stripe:     #10b981;
+      --btn-limpiar-bg:  #1e293b;
+      --btn-limpiar-txt: #94a3b8;
+      --btn-limpiar-hov: #334155;
+      --btn-guardar-bg:  #10b981;
+      --btn-guardar-txt: #020617;
+      --btn-guardar-hov: #34d399;
+      --btn-agregar-brd: #334155;
+      --btn-agregar-txt: #10b981;
+      --estado-ok-bg:    rgba(16,185,129,0.1);
+      --estado-ok-txt:   #34d399;
+      --estado-err-bg:   rgba(239,68,68,0.1);
+      --estado-err-txt:  #f87171;
+      --delete-txt:      #64748b;
+      --delete-hov:      #f87171;
+      --focus-ring:      #10b981;
+      --shadow-card:     0 1px 3px rgba(0,0,0,0.4);
+      --shadow-footer:   0 -4px 20px rgba(0,0,0,0.4);
+    }
+
+    html.light {
+      --bg-body:         #f0f0f0;
+      --bg-card:         #ffffff;
+      --bg-input:        #ffffff;
+      --bg-tipo:         #f1f5f9;
+      --bg-tipo-hover:   #e2e8f0;
+      --border:          #e2e8f0;
+      --border-input:    #cbd5e1;
+      --text-primary:    #1e293b;
+      --text-secondary:  #475569;
+      --text-label:      #64748b;
+      --accent:          #000000;
+      --accent-dim:      rgba(0,0,0,0.06);
+      --accent-text:     #FFC800;
+      --tipo-active-bg:  #000000;
+      --tipo-active-txt: #FFC800;
+      --tipo-inact-txt:  #475569;
+      --header-bg:       #000000;
+      --header-border:   #000000;
+      --header-txt:      #FFC800;
+      --footer-bg:       rgba(255,255,255,0.97);
+      --footer-border:   #e2e8f0;
+      --totals-bg:       #f8fafc;
+      --card-stripe:     #000000;
+      --btn-limpiar-bg:  #f1f5f9;
+      --btn-limpiar-txt: #475569;
+      --btn-limpiar-hov: #e2e8f0;
+      --btn-guardar-bg:  #000000;
+      --btn-guardar-txt: #FFC800;
+      --btn-guardar-hov: #1e293b;
+      --btn-agregar-brd: #cbd5e1;
+      --btn-agregar-txt: #475569;
+      --estado-ok-bg:    #f0fdf4;
+      --estado-ok-txt:   #16a34a;
+      --estado-err-bg:   #fef2f2;
+      --estado-err-txt:  #dc2626;
+      --delete-txt:      #94a3b8;
+      --delete-hov:      #dc2626;
+      --focus-ring:      #FFC800;
+      --shadow-card:     0 1px 3px rgba(0,0,0,0.08);
+      --shadow-footer:   0 -4px 20px rgba(0,0,0,0.08);
+    }
+
+    /* ── Reset ─────────────────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0; padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg-body);
+      color: var(--text-primary);
+      font-size: 16px;
+      min-height: 100dvh;
+      transition: background 0.25s, color 0.25s;
+    }
+
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 148px;
+    }
+
+    /* ── Barra de estado ───────────────────────────────── */
+    #estado-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--estado-err-bg);
+      color: var(--estado-err-txt);
+      border-bottom: 1px solid currentColor;
+    }
+    #estado-bar.visible { display: flex; }
+    #estado-bar.ok {
+      background: var(--estado-ok-bg);
+      color: var(--estado-ok-txt);
+    }
+    #estado-bar .estado-texto { flex: 1; }
+    #btn-reintentar {
+      padding: 6px 12px;
+      background: var(--accent);
+      color: var(--accent-text);
+      border: none;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* ── Header ────────────────────────────────────────── */
+    header {
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--header-border);
+      padding: 14px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.25s;
+    }
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent-dim);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .header-logo-icon svg { width: 20px; height: 20px; color: var(--accent); fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    html.light .header-logo-icon svg { stroke: var(--header-txt); }
+    html.light .header-logo-icon { background: rgba(255,200,0,0.15); }
+    .header-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--header-txt);
+      letter-spacing: -0.3px;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-label);
+      background: var(--accent-dim);
+      padding: 3px 8px;
+      border-radius: 20px;
+    }
+    #btn-tema {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--border-input);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    #btn-tema:active { opacity: 0.7; }
+    #btn-tema svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── Main ──────────────────────────────────────────── */
+    main {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ── Cards generales ───────────────────────────────── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: var(--shadow-card);
+      transition: background 0.25s, border-color 0.25s;
+    }
+
+    .field-group { display: flex; flex-direction: column; gap: 6px; }
+    .field-group + .field-group { margin-top: 14px; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-label);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      padding: 12px 12px;
+      font-size: 16px;
+      background: var(--bg-input);
+      border: 1.5px solid var(--border-input);
+      border-radius: 8px;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      font-family: inherit;
+      -webkit-appearance: none;
+    }
+    input:focus, textarea:focus {
+      border-color: var(--focus-ring);
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+    }
+    html.light input:focus, html.light textarea:focus {
+      box-shadow: 0 0 0 3px rgba(255,200,0,0.2);
+    }
+    textarea { resize: none; min-height: 70px; }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.5); cursor: pointer; }
+    html.light input[type="date"]::-webkit-calendar-picker-indicator { filter: none; }
+
+    /* ── Sección entradas ──────────────────────────────── */
+    .entradas-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-label);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .entradas-count {
+      background: var(--accent-dim);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px;
+    }
+    html.light .entradas-count { color: var(--text-secondary); background: var(--border); }
+
+    /* ── Card entrada ──────────────────────────────────── */
+    .entrada {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+      position: relative;
+      transition: background 0.25s, border-color 0.25s;
+    }
+    .entrada-stripe {
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px; height: 100%;
+      background: var(--card-stripe);
+      border-radius: 12px 0 0 12px;
+    }
+    .entrada-inner {
+      padding: 14px 14px 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .entrada-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .entrada-num {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .btn-eliminar {
+      width: 32px; height: 32px;
+      background: none;
+      border: 1px solid var(--border-input);
+      border-radius: 8px;
+      color: var(--delete-txt);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-eliminar:hover { color: var(--delete-hov); border-color: var(--delete-hov); background: rgba(239,68,68,0.05); }
+    .btn-eliminar svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* Selector de tipo */
+    .tipo-selector {
+      display: flex;
+      background: var(--bg-tipo);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .tipo-btn {
+      flex: 1;
+      padding: 8px 4px;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--tipo-inact-txt);
+      background: transparent;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .tipo-btn:hover { background: var(--bg-tipo-hover); color: var(--text-primary); }
+    .tipo-btn.activo {
+      background: var(--tipo-active-bg);
+      color: var(--tipo-active-txt);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    /* Grid 2 col */
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .row-3 { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+
+    /* Campo Hs viaje (solo visible si tipo=Campo) */
+    .hs-viaje-field { display: none; }
+    .hs-viaje-field.visible { display: block; }
+
+    /* Btn agregar */
+    #btn-agregar {
+      width: 100%;
+      padding: 14px;
+      background: transparent;
+      border: 2px dashed var(--btn-agregar-brd);
+      border-radius: 12px;
+      color: var(--btn-agregar-txt);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    #btn-agregar:hover {
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    html.light #btn-agregar:hover { color: var(--text-primary); border-color: #94a3b8; background: #f8fafc; }
+    #btn-agregar svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; }
+
+    /* ── Footer fijo ───────────────────────────────────── */
+    footer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--footer-bg);
+      border-top: 1px solid var(--footer-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 12px 16px 16px;
+      z-index: 20;
+      box-shadow: var(--shadow-footer);
+      transition: background 0.25s;
+    }
+    .footer-inner {
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .totales {
+      display: flex;
+      align-items: center;
+      background: var(--totals-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .total-item {
+      flex: 1;
+      padding: 8px 14px;
+      display: flex;
+      flex-direction: column;
+    }
+    .total-item:first-child { border-right: 1px solid var(--border); }
+    .total-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-label);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .total-valor {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+    .total-valor.accent { color: var(--accent); }
+    html.light .total-valor.accent { color: var(--text-primary); }
+    .footer-btns { display: flex; gap: 10px; }
+    #btn-limpiar {
+      padding: 14px 16px;
+      background: var(--btn-limpiar-bg);
+      color: var(--btn-limpiar-txt);
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    #btn-limpiar:hover { background: var(--btn-limpiar-hov); }
+    #btn-limpiar svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    #btn-guardar {
+      flex: 1;
+      padding: 14px;
+      background: var(--btn-guardar-bg);
+      color: var(--btn-guardar-txt);
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(16,185,129,0.25);
+      transition: background 0.15s, transform 0.1s;
+    }
+    html.light #btn-guardar { box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
+    #btn-guardar:hover { background: var(--btn-guardar-hov); }
+    #btn-guardar:active { transform: scale(0.98); }
+    #btn-guardar:disabled { opacity: 0.5; cursor: default; transform: none; }
+    #btn-guardar svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── Toast ─────────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 160px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 99;
+      max-width: calc(100vw - 32px);
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    #toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    #toast.ok { background: #064e3b; color: #6ee7b7; }
+    #toast.error { background: #7f1d1d; color: #fca5a5; }
+  </style>
 </head>
 <body>
+  <div class="app">
+    <!-- Estado offline -->
+    <div id="estado-bar">
+      <span class="estado-texto" id="estado-texto">Sin conexión — los datos se guardarán y enviarán al reconectar</span>
+      <button id="btn-reintentar" onclick="reintentarEnvio()">Reintentar</button>
+    </div>
 
-<div class="container">
-  <header>
-    <h1>🔧 MIS HORAS</h1>
-    <div class="subtitle">Control de horas trabajadas</div>
-  </header>
-  <div class="estado-bar" id="estado-bar">
-    <span class="estado-texto" id="estado-texto"></span>
-    <button class="btn-reintentar" id="btn-reintentar" onclick="reintentarCola()">Reintentar</button>
+    <!-- Header -->
+    <header>
+      <div class="header-logo">
+        <div class="header-logo-icon">
+          <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        </div>
+        <span class="header-title">TallerApp</span>
+      </div>
+      <div class="header-right">
+        <span class="header-badge" id="cola-badge" style="display:none"></span>
+        <button id="btn-tema" onclick="toggleTema()" title="Cambiar modo">
+          <!-- ícono sol (modo claro) -->
+          <svg id="icon-tema-sol" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <!-- ícono luna (modo oscuro) -->
+          <svg id="icon-tema-luna" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main>
+      <!-- Datos generales -->
+      <div class="card">
+        <div class="field-group">
+          <label for="nombre">Mi Nombre</label>
+          <input type="text" id="nombre" placeholder="Ingresá tu nombre" autocomplete="name" oninput="guardarNombre()">
+        </div>
+        <div class="field-group">
+          <label for="fecha">Fecha del trabajo</label>
+          <input type="date" id="fecha">
+        </div>
+      </div>
+
+      <!-- Entradas -->
+      <div class="entradas-header">
+        Trabajos del día
+        <span class="entradas-count" id="entradas-count">0</span>
+      </div>
+
+      <div id="lista-entradas"></div>
+
+      <button id="btn-agregar" onclick="agregarEntrada()">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        AGREGAR OTRA MÁQUINA
+      </button>
+    </main>
   </div>
-  <div class="field-block">
-    <label>Mi nombre</label>
-    <input type="text" id="nombre" placeholder="Escribí tu nombre" autocomplete="off">
-  </div>
-  <div class="field-block">
-    <label>Fecha del trabajo</label>
-    <input type="date" id="fecha">
-  </div>
-  <div class="entradas-header">Trabajos del día</div>
-  <div id="entradas"></div>
-  <button class="btn-agregar" onclick="agregarEntrada()">+ AGREGAR OTRA MÁQUINA</button>
-  <div class="total-block">
-    <span class="total-label">Total trabajadas</span>
-    <span class="total-valor" id="total-valor">0,00 hs</span>
-  </div>
-  <div class="total-block" style="margin-top: 0;">
-    <span class="total-label">Total viaje</span>
-    <span class="total-valor" id="total-viaje">0,00 hs</span>
-  </div>
-  <div id="mensaje" class="mensaje"></div>
-  <div class="actions">
-    <button class="btn-enviar" id="btn-guardar" onclick="guardar()">💾 GUARDAR</button>
-    <button class="btn-limpiar" onclick="limpiarTodo()">Limpiar formulario</button>
-  </div>
-</div>
+
+  <!-- Footer fijo -->
+  <footer>
+    <div class="footer-inner">
+      <div class="totales">
+        <div class="total-item">
+          <span class="total-label">Total viaje</span>
+          <span class="total-valor" id="total-viaje">0,0 hs</span>
+        </div>
+        <div class="total-item" style="align-items:flex-end">
+          <span class="total-label">Total trabajadas</span>
+          <span class="total-valor accent" id="total-trab">0,0 hs</span>
+        </div>
+      </div>
+      <div class="footer-btns">
+        <button id="btn-limpiar" onclick="limpiarFormulario()">
+          <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+          Limpiar
+        </button>
+        <button id="btn-guardar" onclick="guardar()">
+          <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          GUARDAR
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast -->
+  <div id="toast"></div>
 
 <script>
-const SUPABASE_URL = "https://wgemrgxlvmakccznlerd.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZW1yZ3hsdm1ha2Njem5sZXJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNDUyNTgsImV4cCI6MjA5NDkyMTI1OH0.ArZLkZ0Rm079BBfIVOXMMNEf3np46PfmB2DAmMB4G0c";
+  /* ── Config ──────────────────────────────────────────── */
+  // ⚠️  Cambiá esta URL por la de tu app publicada en Replit
+  const API_BASE = 'https://TU-APP.replit.app';
 
-const ENTRADAS_DEFAULT = 3;
-const COLA_KEY = 'mhcola_v1';
-let contadorEntradas = 0;
-let reintentoEnCurso = false;
+  const TIPOS = ['Taller', 'Campo', 'Mantenimiento', 'Capacitacion'];
+  const TIPO_LABELS = ['Taller', 'Campo', 'Mant.', 'Capac.'];
+  const COLA_KEY = 'taller_cola_envios';
+  const NOMBRE_KEY = 'taller_nombre';
+  const TEMA_KEY = 'taller_tema';
 
-function agregarEntrada() {
-  contadorEntradas++;
-  const id = contadorEntradas;
-  const cont = document.getElementById('entradas');
-  const div = document.createElement('div');
-  div.className = 'entrada';
-  div.dataset.id = id;
-  div.innerHTML = `
-    <div class="entrada-header">
-      <span class="entrada-num">Trabajo #<span class="num-text">${cont.children.length + 1}</span></span>
-      <button class="btn-eliminar" onclick="eliminarEntrada(${id})" title="Eliminar">×</button>
-    </div>
-    <div class="tipo-selector">
-      <button type="button" class="tipo-btn activo" data-tipo="Taller" onclick="cambiarTipo(${id}, 'Taller')">Taller</button>
-      <button type="button" class="tipo-btn" data-tipo="Campo" onclick="cambiarTipo(${id}, 'Campo')">Campo</button>
-      <button type="button" class="tipo-btn" data-tipo="Mantenimiento" onclick="cambiarTipo(${id}, 'Mantenimiento')">Mant.</button>
-      <button type="button" class="tipo-btn" data-tipo="Capacitacion" onclick="cambiarTipo(${id}, 'Capacitacion')">Capac.</button>
-    </div>
-    <div class="campos-taller">
-      <div class="entrada-fila row-2col">
-        <div><label>N° OT</label><input type="text" class="ot-taller" inputmode="numeric" autocomplete="off"></div>
-        <div class="col-hs"><label>Hs trab.</label><input type="text" class="hs hs-taller" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off"></div>
+  let contadorEntrada = 0;
+
+  /* ── Tema ────────────────────────────────────────────── */
+  function toggleTema() {
+    const esClaro = document.documentElement.classList.toggle('light');
+    localStorage.setItem(TEMA_KEY, esClaro ? 'light' : 'dark');
+    actualizarIconoTema(esClaro);
+    document.getElementById('meta-theme').setAttribute('content', esClaro ? '#ffffff' : '#0f172a');
+  }
+
+  function actualizarIconoTema(esClaro) {
+    document.getElementById('icon-tema-sol').style.display  = esClaro ? 'block' : 'none';
+    document.getElementById('icon-tema-luna').style.display = esClaro ? 'none'  : 'block';
+  }
+
+  function cargarTema() {
+    const guardado = localStorage.getItem(TEMA_KEY);
+    const esClaro = guardado === 'light';
+    if (esClaro) document.documentElement.classList.add('light');
+    actualizarIconoTema(esClaro);
+    document.getElementById('meta-theme').setAttribute('content', esClaro ? '#ffffff' : '#0f172a');
+  }
+
+  /* ── Nombre ──────────────────────────────────────────── */
+  function guardarNombre() {
+    localStorage.setItem(NOMBRE_KEY, document.getElementById('nombre').value);
+  }
+
+  /* ── Fecha ───────────────────────────────────────────── */
+  function hoyISO() {
+    const d = new Date();
+    return d.toISOString().slice(0, 10);
+  }
+
+  /* ── Entradas ────────────────────────────────────────── */
+  function agregarEntrada() {
+    contadorEntrada++;
+    const id = 'entrada-' + contadorEntrada;
+    const lista = document.getElementById('lista-entradas');
+
+    const div = document.createElement('div');
+    div.className = 'entrada';
+    div.id = id;
+    div.dataset.tipo = 'Taller';
+
+    div.innerHTML = `
+      <div class="entrada-stripe"></div>
+      <div class="entrada-inner">
+        <div class="entrada-top">
+          <span class="entrada-num">Entrada <strong>${contadorEntrada}</strong></span>
+          <button class="btn-eliminar" onclick="eliminarEntrada('${id}')" title="Eliminar">
+            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </div>
+        <div class="tipo-selector">
+          ${TIPOS.map((t, i) => `
+            <button class="tipo-btn${i === 0 ? ' activo' : ''}"
+              onclick="seleccionarTipo('${id}', '${t}', this)">
+              ${TIPO_LABELS[i]}
+            </button>
+          `).join('')}
+        </div>
+        <div class="row-3">
+          <div class="field-group">
+            <label>N° OT</label>
+            <input type="text" class="ot" placeholder="Ej: 1234" inputmode="numeric">
+          </div>
+          <div class="field-group">
+            <label>Hs. Trab.</label>
+            <input type="number" class="hs-trab" step="0.5" min="0" placeholder="0" inputmode="decimal" oninput="actualizarTotales()">
+          </div>
+        </div>
+        <div class="field-group hs-viaje-field" data-campo-field>
+          <label>Hs. Viaje</label>
+          <input type="number" class="hs-viaje" step="0.5" min="0" placeholder="0" inputmode="decimal" oninput="actualizarTotales()">
+        </div>
+        <div class="field-group">
+          <label>Máquina</label>
+          <input type="text" class="maquina" placeholder="Ej: Tractor JD 6110">
+        </div>
+        <div class="field-group">
+          <label>Motivo del cambio (opcional)</label>
+          <input type="text" class="motivo" placeholder="Ej: Cambio de aceite">
+        </div>
+        <div class="field-group">
+          <label>Observaciones (opcional)</label>
+          <textarea class="observaciones" rows="2" placeholder="Detalles extra..."></textarea>
+        </div>
       </div>
-      <div class="entrada-fila"><label>Máquina</label><input type="text" class="maquina-taller" placeholder="ej: Tractor JD 6110" autocomplete="off"></div>
-      <div class="entrada-fila"><label>Motivo del cambio (opcional)</label><input type="text" class="motivo-taller" placeholder="ej: falta de repuestos" autocomplete="off"></div>
-      <div class="entrada-fila"><label>Observaciones (opcional)</label><input type="text" class="observaciones-taller" autocomplete="off"></div>
-    </div>
-    <div class="campos-campo">
-      <div class="entrada-fila row-3col">
-        <div class="col-ot"><label>N° OT</label><input type="text" class="ot-campo" inputmode="numeric" autocomplete="off"></div>
-        <div class="col-hs"><label>Hs trab.</label><input type="text" class="hs hs-campo" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off"></div>
-        <div class="col-hs"><label>Hs viaje</label><input type="text" class="viaje-campo" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off"></div>
-      </div>
-      <div class="entrada-fila"><label>Máquina</label><input type="text" class="maquina-campo" placeholder="ej: Tractor JD 6110" autocomplete="off"></div>
-      <div class="entrada-fila"><label>Motivo del cambio (opcional)</label><input type="text" class="motivo-campo" autocomplete="off"></div>
-      <div class="entrada-fila"><label>Observaciones (opcional)</label><input type="text" class="observaciones-campo" autocomplete="off"></div>
-    </div>
-    <div class="campos-mant">
-      <div class="entrada-fila"><label>Hs trab.</label><input type="text" class="hs hs-mant" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off"></div>
-      <div class="entrada-fila"><label>Descripción</label><input type="text" class="observaciones-mant" placeholder="ej: limpieza del taller" autocomplete="off"></div>
-    </div>
-    <div class="campos-cap">
-      <div class="entrada-fila"><label>Hs capacitación</label><input type="text" class="hs hs-cap" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off"></div>
-      <div class="entrada-fila"><label>Descripción</label><input type="text" class="observaciones-cap" placeholder="ej: Charla técnica AGCO" autocomplete="off"></div>
-    </div>
-  `;
-  div.dataset.tipo = 'Taller';
-  cont.appendChild(div);
-  renumerar();
-  if (cont.children.length > ENTRADAS_DEFAULT) {
-    div.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    setTimeout(() => {
-      const inp = div.querySelector('.ot-taller');
-      if (inp) inp.focus();
-    }, 300);
+    `;
+
+    lista.appendChild(div);
+    actualizarConteo();
+    actualizarTotales();
+    renumerarEntradas();
   }
-}
 
-function cambiarTipo(idEntrada, nuevoTipo) {
-  const div = document.querySelector(`.entrada[data-id="${idEntrada}"]`);
-  if (!div) return;
-  div.dataset.tipo = nuevoTipo;
-  div.querySelectorAll('.tipo-btn').forEach(btn => {
-    btn.classList.toggle('activo', btn.dataset.tipo === nuevoTipo);
-  });
-  actualizarTotal();
-}
-
-function eliminarEntrada(id) {
-  const entradas = document.querySelectorAll('.entrada');
-  if (entradas.length <= 1) { alert('Tiene que quedar al menos un trabajo.'); return; }
-  const el = document.querySelector(`.entrada[data-id="${id}"]`);
-  if (el) el.remove();
-  renumerar();
-  actualizarTotal();
-}
-
-function renumerar() {
-  document.querySelectorAll('.entrada').forEach((el, idx) => {
-    el.querySelector('.num-text').textContent = idx + 1;
-  });
-}
-
-function parseHoras(str) {
-  if (!str) return 0;
-  const n = parseFloat(str.replace(',', '.'));
-  return isNaN(n) ? 0 : n;
-}
-
-function fmtHoras(n) {
-  return n.toFixed(2).replace('.', ',');
-}
-
-function actualizarTotal() {
-  let totalTrab = 0;
-  let totalViaje = 0;
-  document.querySelectorAll('.entrada').forEach(el => {
-    const tipo = el.dataset.tipo || 'Taller';
-    if (tipo === 'Taller') {
-      totalTrab += parseHoras(el.querySelector('.hs-taller').value);
-    } else if (tipo === 'Campo') {
-      totalTrab += parseHoras(el.querySelector('.hs-campo').value);
-      totalViaje += parseHoras(el.querySelector('.viaje-campo').value);
-    } else if (tipo === 'Mantenimiento') {
-      totalTrab += parseHoras(el.querySelector('.hs-mant').value);
-    } else if (tipo === 'Capacitacion') {
-      totalTrab += parseHoras(el.querySelector('.hs-cap').value);
-    }
-  });
-  document.getElementById('total-valor').textContent = fmtHoras(totalTrab) + ' hs';
-  document.getElementById('total-viaje').textContent = fmtHoras(totalViaje) + ' hs';
-}
-
-function mostrarMensaje(texto, tipo, duracion = 5000) {
-  const div = document.getElementById('mensaje');
-  div.textContent = texto;
-  div.className = 'mensaje ' + tipo;
-  if (duracion > 0) {
-    setTimeout(() => { div.style.display = 'none'; }, duracion);
+  function eliminarEntrada(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+    actualizarConteo();
+    actualizarTotales();
+    renumerarEntradas();
   }
-}
 
-function recolectarEntradas() {
-  const nombre = document.getElementById('nombre').value.trim();
-  const fecha = document.getElementById('fecha').value;
-  const entradas = [];
-  document.querySelectorAll('.entrada').forEach(el => {
-    const tipo = el.dataset.tipo || 'Taller';
-    let ot = '', maquina = '', hs = '', viaje = '', motivo = '', observaciones = '';
-    if (tipo === 'Taller') {
-      ot = el.querySelector('.ot-taller').value.trim();
-      maquina = el.querySelector('.maquina-taller').value.trim();
-      hs = el.querySelector('.hs-taller').value.trim().replace(',', '.');
-      motivo = el.querySelector('.motivo-taller').value.trim();
-      observaciones = el.querySelector('.observaciones-taller').value.trim();
-    } else if (tipo === 'Campo') {
-      ot = el.querySelector('.ot-campo').value.trim();
-      maquina = el.querySelector('.maquina-campo').value.trim();
-      hs = el.querySelector('.hs-campo').value.trim().replace(',', '.');
-      viaje = el.querySelector('.viaje-campo').value.trim().replace(',', '.');
-      motivo = el.querySelector('.motivo-campo').value.trim();
-      observaciones = el.querySelector('.observaciones-campo').value.trim();
-    } else if (tipo === 'Mantenimiento') {
-      hs = el.querySelector('.hs-mant').value.trim().replace(',', '.');
-      observaciones = el.querySelector('.observaciones-mant').value.trim();
-    } else if (tipo === 'Capacitacion') {
-      hs = el.querySelector('.hs-cap').value.trim().replace(',', '.');
-      observaciones = el.querySelector('.observaciones-cap').value.trim();
-    }
-    if (tipo === 'Mantenimiento' || tipo === 'Capacitacion') {
-      if (hs) entradas.push({ tipo, ot, maquina, horas: hs, viaje, motivo, observaciones });
+  function seleccionarTipo(entradaId, tipo, btn) {
+    const entrada = document.getElementById(entradaId);
+    entrada.dataset.tipo = tipo;
+    entrada.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('activo'));
+    btn.classList.add('activo');
+    const campoField = entrada.querySelector('[data-campo-field]');
+    if (tipo === 'Campo') {
+      campoField.classList.add('visible');
     } else {
-      if (maquina || hs || viaje) entradas.push({ tipo, ot, maquina, horas: hs, viaje, motivo, observaciones });
+      campoField.classList.remove('visible');
+      const hsViaje = campoField.querySelector('.hs-viaje');
+      if (hsViaje) hsViaje.value = '';
+      actualizarTotales();
     }
-  });
-  return { nombre, fecha, entradas };
-}
-
-function leerCola() {
-  try { return JSON.parse(localStorage.getItem(COLA_KEY) || '[]'); } catch(e) { return []; }
-}
-
-function guardarCola(cola) {
-  localStorage.setItem(COLA_KEY, JSON.stringify(cola));
-}
-
-function generarId() {
-  return Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 9);
-}
-
-function actualizarEstadoBar() {
-  const cola = leerCola();
-  const bar = document.getElementById('estado-bar');
-  const texto = document.getElementById('estado-texto');
-  const btn = document.getElementById('btn-reintentar');
-  const sinConexion = !navigator.onLine;
-  if (cola.length > 0) {
-    bar.classList.add('visible');
-    if (sinConexion) {
-      bar.classList.add('sin-conexion');
-      texto.textContent = `📵 Sin conexión · Pendientes (${cola.length})`;
-      btn.style.display = 'none';
-    } else {
-      bar.classList.remove('sin-conexion');
-      texto.textContent = `📤 Pendientes (${cola.length})`;
-      btn.style.display = 'block';
-    }
-  } else if (sinConexion) {
-    bar.classList.add('visible', 'sin-conexion');
-    texto.textContent = '📵 Sin conexión';
-    btn.style.display = 'none';
-  } else {
-    bar.classList.remove('visible', 'sin-conexion');
   }
-}
 
-function enviarUno(envio) {
-  return new Promise(async (resolve) => {
-    if (!navigator.onLine) { resolve(false); return; }
-    const rows = envio.entradas.map(e => ({
-      id: crypto.randomUUID(),
-      id_envio: envio.idEnvio,
-      mecanico: envio.nombre,
-      fecha: envio.fecha,
-      tipo: e.tipo,
-      ot: e.ot || null,
-      maquina: e.maquina || null,
-      hs_trabajo: parseFloat(e.horas) || 0,
-      hs_viaje: parseFloat(e.viaje) || 0,
-      motivo: e.motivo || null,
-      observaciones: e.observaciones || null,
-    }));
-    try {
-      const respuesta = await fetch(SUPABASE_URL + '/rest/v1/registros', {
-        method: 'POST',
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify(rows),
-        keepalive: true
-      });
-      resolve(respuesta.ok);
-    } catch(e) { resolve(false); }
-  });
-}
-
-async function reintentarCola() {
-  if (reintentoEnCurso) return;
-  if (!navigator.onLine) { actualizarEstadoBar(); return; }
-  reintentoEnCurso = true;
-  let cola = leerCola();
-  const aReintentar = [...cola];
-  for (const envio of aReintentar) {
-    const ok = await enviarUno(envio);
-    if (ok) {
-      cola = leerCola().filter(e => e.idEnvio !== envio.idEnvio);
-      guardarCola(cola);
-    } else { break; }
-  }
-  reintentoEnCurso = false;
-  actualizarEstadoBar();
-}
-
-function guardar() {
-  const datos = recolectarEntradas();
-  if (!datos.nombre) { alert('Por favor, escribí tu nombre antes de guardar.'); document.getElementById('nombre').focus(); return; }
-  if (!datos.fecha) { alert('Por favor, completá la fecha antes de guardar.'); return; }
-  if (datos.entradas.length === 0) { alert('Cargá al menos un trabajo con horas antes de guardar.'); return; }
-  try { localStorage.setItem('mecanicoNombre', datos.nombre); } catch(e){}
-  const envio = {
-    idEnvio: generarId(),
-    nombre: datos.nombre,
-    fecha: datos.fecha,
-    entradas: datos.entradas,
-    timestamp: new Date().toISOString()
-  };
-  const cola = leerCola();
-  cola.push(envio);
-  guardarCola(cola);
-  const btn = document.getElementById('btn-guardar');
-  btn.disabled = true;
-  setTimeout(() => { btn.disabled = false; }, 5000);
-  if (navigator.onLine) {
-    mostrarMensaje('✓ Datos guardados correctamente', 'exito', 5000);
-  } else {
-    mostrarMensaje('📵 Sin conexión. Se enviará automáticamente cuando vuelva la señal.', 'advertencia', 5000);
-  }
-  limpiarEntradasSilencioso();
-  reintentarCola().then(() => { actualizarEstadoBar(); });
-  actualizarEstadoBar();
-}
-
-function limpiarEntradasSilencioso() {
-  document.getElementById('entradas').innerHTML = '';
-  contadorEntradas = 0;
-  for (let i = 0; i < ENTRADAS_DEFAULT; i++) agregarEntrada();
-  document.getElementById('fecha').value = hoyISO();
-  actualizarTotal();
-}
-
-function limpiarTodo() {
-  if (!confirm('¿Limpiar el formulario? Se borrarán todos los datos cargados.')) return;
-  limpiarEntradasSilencioso();
-}
-
-function hoyISO() {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-window.addEventListener('online', () => { actualizarEstadoBar(); reintentarCola(); });
-window.addEventListener('offline', actualizarEstadoBar);
-window.addEventListener('focus', () => { reintentarCola(); actualizarEstadoBar(); });
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') { reintentarCola(); actualizarEstadoBar(); }
-});
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('message', event => {
-    if (event.data && event.data.tipo === 'reintentar-cola') reintentarCola();
-  });
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js').catch(err => {
-      console.log('No se pudo registrar el service worker:', err);
+  function renumerarEntradas() {
+    document.querySelectorAll('.entrada').forEach((el, i) => {
+      const num = el.querySelector('.entrada-num');
+      if (num) num.innerHTML = `Entrada <strong>${i + 1}</strong>`;
     });
   }
-  for (let i = 0; i < ENTRADAS_DEFAULT; i++) agregarEntrada();
-  document.getElementById('fecha').value = hoyISO();
-  try {
-    const guardado = localStorage.getItem('mecanicoNombre');
-    if (guardado) document.getElementById('nombre').value = guardado;
-  } catch(e){}
-  actualizarTotal();
-  actualizarEstadoBar();
-  reintentarCola();
-});
+
+  function actualizarConteo() {
+    const n = document.querySelectorAll('.entrada').length;
+    document.getElementById('entradas-count').textContent = n;
+  }
+
+  function actualizarTotales() {
+    let trab = 0, viaje = 0;
+    document.querySelectorAll('.entrada').forEach(el => {
+      const ht = parseFloat(el.querySelector('.hs-trab')?.value || '0') || 0;
+      const hv = parseFloat(el.querySelector('.hs-viaje')?.value || '0') || 0;
+      trab += ht;
+      viaje += hv;
+    });
+    document.getElementById('total-trab').textContent  = trab.toFixed(1).replace('.', ',') + ' hs';
+    document.getElementById('total-viaje').textContent = viaje.toFixed(1).replace('.', ',') + ' hs';
+  }
+
+  /* ── Guardar / API ───────────────────────────────────── */
+  function generarId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  function construirPayload() {
+    const nombre = document.getElementById('nombre').value.trim();
+    const fecha  = document.getElementById('fecha').value;
+    if (!nombre) { mostrarToast('Ingresá tu nombre primero', 'error'); return null; }
+    if (!fecha)  { mostrarToast('Seleccioná una fecha', 'error'); return null; }
+
+    const entradas = [];
+    let valido = true;
+    document.querySelectorAll('.entrada').forEach((el, i) => {
+      const tipo  = el.dataset.tipo || 'Taller';
+      const ot    = el.querySelector('.ot')?.value.trim() || '';
+      const hsTrab  = parseFloat(el.querySelector('.hs-trab')?.value || '0') || 0;
+      const hsViaje = tipo === 'Campo' ? (parseFloat(el.querySelector('.hs-viaje')?.value || '0') || 0) : 0;
+      const maquina = el.querySelector('.maquina')?.value.trim() || '';
+      const motivo  = el.querySelector('.motivo')?.value.trim() || '';
+      const obs     = el.querySelector('.observaciones')?.value.trim() || '';
+
+      if (!maquina) {
+        mostrarToast(`Entrada ${i + 1}: ingresá la máquina`, 'error');
+        valido = false;
+        return;
+      }
+      if (hsTrab <= 0) {
+        mostrarToast(`Entrada ${i + 1}: ingresá las horas de trabajo`, 'error');
+        valido = false;
+        return;
+      }
+
+      entradas.push({
+        tipo,
+        ot,
+        maquina,
+        hs_trabajo: hsTrab,
+        hs_viaje:   hsViaje,
+        motivo,
+        observaciones: obs
+      });
+    });
+
+    if (!valido) return null;
+    if (entradas.length === 0) { mostrarToast('Agregá al menos una máquina', 'error'); return null; }
+
+    return {
+      idEnvio: generarId(),
+      nombre,
+      fecha,
+      entradas
+    };
+  }
+
+  async function guardar() {
+    const payload = construirPayload();
+    if (!payload) return;
+
+    const btn = document.getElementById('btn-guardar');
+    btn.disabled = true;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" style="animation:spin 1s linear infinite;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;width:20px;height:20px"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Guardando...`;
+
+    try {
+      await enviarPayload(payload);
+      mostrarToast('✓ Guardado correctamente', 'ok');
+      limpiarFormulario();
+    } catch (e) {
+      encolarPayload(payload);
+      mostrarToast('Sin conexión — guardado en cola', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;width:20px;height:20px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> GUARDAR`;
+    }
+  }
+
+  async function enviarPayload(payload) {
+    const res = await fetch(API_BASE + '/api/registros', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Error ' + res.status);
+    return res.json();
+  }
+
+  /* ── Cola offline ────────────────────────────────────── */
+  function getCola() {
+    try { return JSON.parse(localStorage.getItem(COLA_KEY) || '[]'); } catch { return []; }
+  }
+
+  function setCola(cola) {
+    localStorage.setItem(COLA_KEY, JSON.stringify(cola));
+    actualizarBadgeCola();
+  }
+
+  function encolarPayload(payload) {
+    const cola = getCola();
+    cola.push(payload);
+    setCola(cola);
+  }
+
+  function actualizarBadgeCola() {
+    const cola = getCola();
+    const badge = document.getElementById('cola-badge');
+    if (cola.length > 0) {
+      badge.textContent = cola.length + ' pendiente' + (cola.length > 1 ? 's' : '');
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  async function reintentarEnvio() {
+    const cola = getCola();
+    if (cola.length === 0) return;
+
+    const pendientes = [...cola];
+    const exitosos = [];
+
+    for (const payload of pendientes) {
+      try {
+        await enviarPayload(payload);
+        exitosos.push(payload.idEnvio);
+      } catch (e) {
+        break;
+      }
+    }
+
+    if (exitosos.length > 0) {
+      const nuevaCola = getCola().filter(p => !exitosos.includes(p.idEnvio));
+      setCola(nuevaCola);
+      mostrarToast(`✓ ${exitosos.length} registro(s) enviado(s)`, 'ok');
+    }
+  }
+
+  /* ── Conectividad ────────────────────────────────────── */
+  function actualizarEstado() {
+    const bar   = document.getElementById('estado-bar');
+    const texto = document.getElementById('estado-texto');
+    const btn   = document.getElementById('btn-reintentar');
+    const cola  = getCola();
+
+    if (!navigator.onLine) {
+      bar.className = 'visible';
+      texto.textContent = 'Sin conexión — los datos se guardarán y enviarán al reconectar';
+      btn.style.display = 'inline-block';
+    } else if (cola.length > 0) {
+      bar.className = 'visible ok';
+      texto.textContent = `Conectado — ${cola.length} registro(s) pendiente(s) de envío`;
+      btn.style.display = 'inline-block';
+      reintentarEnvio();
+    } else {
+      bar.className = '';
+    }
+  }
+
+  window.addEventListener('online',  actualizarEstado);
+  window.addEventListener('offline', actualizarEstado);
+
+  /* ── Limpiar ─────────────────────────────────────────── */
+  function limpiarFormulario() {
+    document.getElementById('fecha').value  = hoyISO();
+    document.getElementById('lista-entradas').innerHTML = '';
+    contadorEntrada = 0;
+    actualizarConteo();
+    actualizarTotales();
+    agregarEntrada();
+  }
+
+  /* ── Toast ───────────────────────────────────────────── */
+  let toastTimer;
+  function mostrarToast(msg, tipo = '') {
+    const t = document.getElementById('toast');
+    clearTimeout(toastTimer);
+    t.textContent = msg;
+    t.className = 'visible ' + tipo;
+    toastTimer = setTimeout(() => { t.className = ''; }, 3000);
+  }
+
+  /* ── CSS animation ───────────────────────────────────── */
+  const style = document.createElement('style');
+  style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+  document.head.appendChild(style);
+
+  /* ── Inicializar ─────────────────────────────────────── */
+  cargarTema();
+  document.getElementById('nombre').value = localStorage.getItem(NOMBRE_KEY) || '';
+  document.getElementById('fecha').value  = hoyISO();
+  actualizarBadgeCola();
+  actualizarEstado();
+  agregarEntrada();
+
+  /* ── Service Worker ──────────────────────────────────── */
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
 </script>
 </body>
 </html>
