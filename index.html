@@ -46,13 +46,14 @@
   .row-3col > div { flex: 1; }
   .row-3col .col-ot { flex: 0 0 38%; }
   .row-3col .col-hs { flex: 1; }
-  .tipo-selector { display: flex; gap: 6px; margin-bottom: 12px; }
-  .tipo-btn { flex: 1; padding: 10px 4px; font-size: 13px; font-weight: bold; border: 2px solid #000; background: #fff; color: #000; border-radius: 4px; cursor: pointer; }
+  .tipo-selector { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .tipo-btn { flex: 1; min-width: 70px; padding: 10px 4px; font-size: 13px; font-weight: bold; border: 2px solid #000; background: #fff; color: #000; border-radius: 4px; cursor: pointer; }
   .tipo-btn.activo { background: #000; color: #FFC800; }
-  .entrada .campos-taller, .entrada .campos-campo, .entrada .campos-mant { display: none; }
+  .entrada .campos-taller, .entrada .campos-campo, .entrada .campos-mant, .entrada .campos-cap { display: none; }
   .entrada[data-tipo="Taller"] .campos-taller { display: block; }
   .entrada[data-tipo="Campo"] .campos-campo { display: block; }
   .entrada[data-tipo="Mantenimiento"] .campos-mant { display: block; }
+  .entrada[data-tipo="Capacitacion"] .campos-cap { display: block; }
   .btn-agregar { width: calc(100% - 32px); margin: 16px; padding: 16px; font-size: 16px; font-weight: bold; border: 2px dashed #000; background: #fff; color: #000; border-radius: 6px; cursor: pointer; }
   .btn-agregar:active { background: #f0f0f0; }
   .total-block { padding: 18px 16px; background: #fafafa; border-top: 2px solid #000; border-bottom: 2px solid #000; display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
@@ -108,7 +109,10 @@
 </div>
 
 <script>
-const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzc5DpW4GspsOiUaAzE-crvjxMMAtoleUKefh76Olh5M48SeJGvWHlVgYGazQOZ8tVJFw/exec";
+// ⚠️ CAMBIAR ESTA URL por el dominio de producción después de publicar en Replit
+// Ejemplo: "https://mi-taller.replit.app"
+const URL_API = "https://119ab0c3-1d76-4b77-941a-facc341951fe-00-33wena1i7jlmq.janeway.replit.dev";
+
 const ENTRADAS_DEFAULT = 3;
 const COLA_KEY = 'mhcola_v1';
 let contadorEntradas = 0;
@@ -129,7 +133,8 @@ function agregarEntrada() {
     <div class="tipo-selector">
       <button type="button" class="tipo-btn activo" data-tipo="Taller" onclick="cambiarTipo(${id}, 'Taller')">Taller</button>
       <button type="button" class="tipo-btn" data-tipo="Campo" onclick="cambiarTipo(${id}, 'Campo')">Campo</button>
-      <button type="button" class="tipo-btn" data-tipo="Mantenimiento" onclick="cambiarTipo(${id}, 'Mantenimiento')">Mantenimiento</button>
+      <button type="button" class="tipo-btn" data-tipo="Mantenimiento" onclick="cambiarTipo(${id}, 'Mantenimiento')">Mant.</button>
+      <button type="button" class="tipo-btn" data-tipo="Capacitacion" onclick="cambiarTipo(${id}, 'Capacitacion')">Capac.</button>
     </div>
     <div class="campos-taller">
       <div class="entrada-fila row-2col">
@@ -153,6 +158,10 @@ function agregarEntrada() {
     <div class="campos-mant">
       <div class="entrada-fila"><label>Hs trab.</label><input type="text" class="hs hs-mant" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off"></div>
       <div class="entrada-fila"><label>Descripción</label><input type="text" class="observaciones-mant" placeholder="ej: limpieza del taller" autocomplete="off"></div>
+    </div>
+    <div class="campos-cap">
+      <div class="entrada-fila"><label>Hs capacitación</label><input type="text" class="hs hs-cap" inputmode="decimal" placeholder="0,0" oninput="actualizarTotal()" autocomplete="off"></div>
+      <div class="entrada-fila"><label>Descripción</label><input type="text" class="observaciones-cap" placeholder="ej: Charla técnica AGCO" autocomplete="off"></div>
     </div>
   `;
   div.dataset.tipo = 'Taller';
@@ -214,6 +223,8 @@ function actualizarTotal() {
       totalViaje += parseHoras(el.querySelector('.viaje-campo').value);
     } else if (tipo === 'Mantenimiento') {
       totalTrab += parseHoras(el.querySelector('.hs-mant').value);
+    } else if (tipo === 'Capacitacion') {
+      totalTrab += parseHoras(el.querySelector('.hs-cap').value);
     }
   });
   document.getElementById('total-valor').textContent = fmtHoras(totalTrab) + ' hs';
@@ -252,9 +263,12 @@ function recolectarEntradas() {
     } else if (tipo === 'Mantenimiento') {
       hs = el.querySelector('.hs-mant').value.trim().replace(',', '.');
       observaciones = el.querySelector('.observaciones-mant').value.trim();
+    } else if (tipo === 'Capacitacion') {
+      hs = el.querySelector('.hs-cap').value.trim().replace(',', '.');
+      observaciones = el.querySelector('.observaciones-cap').value.trim();
     }
-    if (tipo === 'Mantenimiento') {
-      if (hs && observaciones) {
+    if (tipo === 'Mantenimiento' || tipo === 'Capacitacion') {
+      if (hs) {
         entradas.push({ tipo, ot, maquina, horas: hs, viaje, motivo, observaciones });
       }
     } else {
@@ -307,24 +321,21 @@ function actualizarEstadoBar() {
 function enviarUno(envio) {
   return new Promise(async (resolve) => {
     if (!navigator.onLine) { resolve(false); return; }
-    const blob = new Blob([JSON.stringify(envio)], { type: 'text/plain' });
-    let enviado = false;
-    try { enviado = navigator.sendBeacon(URL_SCRIPT, blob); } catch(e) {}
-    if (!enviado) {
-      try {
-        await fetch(URL_SCRIPT, {
-          method: 'POST', mode: 'no-cors',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify(envio), keepalive: true
-        });
-      } catch(e) { resolve(false); return; }
-    }
-    await new Promise(r => setTimeout(r, 5000));
     try {
-      const urlVerif = URL_SCRIPT + '?verificar=' + encodeURIComponent(envio.idEnvio);
-      const respuesta = await fetch(urlVerif);
-      const texto = await respuesta.text();
-      if (texto.trim() === 'OK') { resolve(true); } else { resolve(false); }
+      const respuesta = await fetch(URL_API + '/api/registros', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(envio),
+        keepalive: true
+      });
+      if (respuesta.ok) { resolve(true); return; }
+    } catch(e) {}
+    // Si el POST falló, verificar si llegó igual (por si hubo timeout de red)
+    try {
+      const urlVerif = URL_API + '/api/verificar?id=' + encodeURIComponent(envio.idEnvio);
+      const respVerif = await fetch(urlVerif);
+      const json = await respVerif.json();
+      resolve(json.estado === 'OK');
     } catch(err) { resolve(false); }
   });
 }
@@ -350,7 +361,7 @@ function guardar() {
   const datos = recolectarEntradas();
   if (!datos.nombre) { alert('Por favor, escribí tu nombre antes de guardar.'); document.getElementById('nombre').focus(); return; }
   if (!datos.fecha) { alert('Por favor, completá la fecha antes de guardar.'); return; }
-  if (datos.entradas.length === 0) { alert('Cargá al menos un trabajo con máquina y horas antes de guardar.'); return; }
+  if (datos.entradas.length === 0) { alert('Cargá al menos un trabajo con horas antes de guardar.'); return; }
   try { localStorage.setItem('mecanicoNombre', datos.nombre); } catch(e){}
   const envio = {
     idEnvio: generarId(),
