@@ -573,9 +573,15 @@
     .ot-item-info { flex: 1; min-width: 0; }
     .ot-item-num { font-weight: 700; color: var(--accent); font-size: 1rem; }
     .ot-item-sub { font-size: 0.78rem; color: var(--text-secondary); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .ot-item-check { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .ot-item-check label { font-size: 0.7rem; color: var(--text-secondary); text-align: center; line-height: 1.2; cursor: pointer; }
-    .ot-terminada-check { width: 18px; height: 18px; cursor: pointer; accent-color: #ef4444; }
+    .ot-terminar-row {
+      display: flex; align-items: center; gap: 8px; margin-top: 7px;
+    }
+    .ot-terminar-row input[type="checkbox"] {
+      width: 17px; height: 17px; cursor: pointer; accent-color: #ef4444; flex-shrink: 0;
+    }
+    .ot-terminar-row label {
+      font-size: 0.8rem; color: var(--text-secondary); cursor: pointer; line-height: 1.3;
+    }
     .ot-empty { padding: 24px 20px; text-align: center; color: var(--text-secondary); font-size: 0.9rem; }
     .modal-footer { padding: 12px 20px; border-top: 1px solid var(--border); }
     .form-agregar-ot { display: flex; gap: 8px; margin-bottom: 10px; }
@@ -791,6 +797,10 @@
             <input type="hidden" class="ot">
             <button type="button" class="ot-selector-btn vacio"
               onclick="abrirSelectorOT('${id}')">Seleccionar OT...</button>
+            <div class="ot-terminar-row" style="display:none">
+              <input type="checkbox" class="ot-terminar-check" id="chk-term-${id}">
+              <label for="chk-term-${id}">¿Se terminó de trabajar en esta OT?</label>
+            </div>
           </div>
           <div class="field-group">
             <label>Hs. Trab.</label>
@@ -879,12 +889,8 @@
       <div class="ot-item" onclick="seleccionarOTModal('${ot.numero_ot}')">
         <div class="ot-item-info">
           <div class="ot-item-num">OT ${ot.numero_ot}</div>
+          ${ot.maquina ? `<div class="ot-item-sub">${ot.maquina}</div>` : ''}
           ${ot.descripcion ? `<div class="ot-item-sub">${ot.descripcion}</div>` : ''}
-        </div>
-        <div class="ot-item-check" onclick="event.stopPropagation()">
-          <input type="checkbox" class="ot-terminada-check" id="check-ot-${ot.numero_ot}"
-            onchange="cerrarOT('${ot.numero_ot}', this)">
-          <label for="check-ot-${ot.numero_ot}">¿Terminó<br>esta OT?</label>
         </div>
       </div>
     `).join('');
@@ -894,10 +900,12 @@
     if (!entradaOTActual) return;
     const entrada = document.getElementById(entradaOTActual);
     if (!entrada) return;
-    const hidden  = entrada.querySelector('.ot');
-    const btn     = entrada.querySelector('.ot-selector-btn');
+    const hidden      = entrada.querySelector('.ot');
+    const btn         = entrada.querySelector('.ot-selector-btn');
+    const terminarRow = entrada.querySelector('.ot-terminar-row');
     if (hidden) hidden.value = numeroOT;
     if (btn) { btn.textContent = `OT ${numeroOT}`; btn.classList.remove('vacio'); }
+    if (terminarRow) terminarRow.style.display = 'flex';
     cerrarModalOT();
   }
 
@@ -1114,6 +1122,30 @@
 
     try {
       await enviarPayload(payload);
+
+      // Cerrar OTs marcadas como terminadas
+      const otsACerrar = new Set();
+      document.querySelectorAll('.entrada').forEach(el => {
+        const check = el.querySelector('.ot-terminar-check');
+        const otVal = el.querySelector('.ot')?.value;
+        if (check?.checked && otVal) otsACerrar.add(otVal);
+      });
+      if (otsACerrar.size > 0) {
+        await Promise.all([...otsACerrar].map(ot =>
+          fetch(`${SUPABASE_URL}/rest/v1/ordenes_trabajo?numero_ot=eq.${encodeURIComponent(ot)}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type':  'application/json',
+              'apikey':        SUPABASE_ANON,
+              'Authorization': `Bearer ${SUPABASE_ANON}`,
+              'Prefer':        'return=minimal',
+            },
+            body: JSON.stringify({ estado: 'cerrada', cerrada_at: new Date().toISOString() }),
+          })
+        ));
+        await cargarOTs();
+      }
+
       mostrarToast('✓ Guardado correctamente', 'ok');
       limpiarFormulario();
     } catch (e) {
@@ -1153,6 +1185,24 @@
       const detail = await res.text().catch(() => '');
       throw new Error(`Error ${res.status}: ${detail}`);
     }
+
+    // Guardar máquina en la OT si aún no tiene una registrada
+    const otMaquina = {};
+    for (const e of rows) {
+      if (e.ot && e.maquina && !otMaquina[e.ot]) otMaquina[e.ot] = e.maquina;
+    }
+    await Promise.all(Object.entries(otMaquina).map(([ot, maquina]) =>
+      fetch(`${SUPABASE_URL}/rest/v1/ordenes_trabajo?numero_ot=eq.${encodeURIComponent(ot)}&maquina=is.null`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type':  'application/json',
+          'apikey':        SUPABASE_ANON,
+          'Authorization': `Bearer ${SUPABASE_ANON}`,
+          'Prefer':        'return=minimal',
+        },
+        body: JSON.stringify({ maquina }),
+      })
+    ));
   }
 
   /* ── Cola offline ────────────────────────────────────── */
