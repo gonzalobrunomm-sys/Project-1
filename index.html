@@ -528,6 +528,81 @@
     }
     #toast.ok { background: #064e3b; color: #6ee7b7; }
     #toast.error { background: #7f1d1d; color: #fca5a5; }
+
+    /* ── Modal OT ──────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.7);
+      display: flex; align-items: flex-end; justify-content: center;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px 20px 0 0;
+      width: 100%; max-width: 520px;
+      max-height: 70vh;
+      display: flex; flex-direction: column;
+      box-shadow: 0 -8px 40px rgba(0,0,0,0.5);
+    }
+    .modal-handle {
+      width: 36px; height: 4px;
+      background: var(--border-input); border-radius: 2px;
+      margin: 12px auto 0;
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-header span { font-weight: 600; color: var(--text-primary); font-size: 1rem; }
+    .modal-close {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-secondary); font-size: 1.4rem; line-height: 1;
+      padding: 2px 6px; border-radius: 6px;
+    }
+    .modal-close:hover { color: var(--text-primary); }
+    .modal-lista { flex: 1; overflow-y: auto; padding: 8px 0; }
+    .ot-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 20px; cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .ot-item:hover { background: var(--bg-tipo-hover); }
+    .ot-item-info { flex: 1; min-width: 0; }
+    .ot-item-num { font-weight: 700; color: var(--accent); font-size: 1rem; }
+    .ot-item-sub { font-size: 0.78rem; color: var(--text-secondary); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ot-item-check { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .ot-item-check label { font-size: 0.7rem; color: var(--text-secondary); text-align: center; line-height: 1.2; cursor: pointer; }
+    .ot-terminada-check { width: 18px; height: 18px; cursor: pointer; accent-color: #ef4444; }
+    .ot-empty { padding: 24px 20px; text-align: center; color: var(--text-secondary); font-size: 0.9rem; }
+    .modal-footer { padding: 12px 20px; border-top: 1px solid var(--border); }
+    .form-agregar-ot { display: flex; gap: 8px; margin-bottom: 10px; }
+    .form-agregar-ot input {
+      flex: 1; background: var(--bg-input); border: 1px solid var(--border-input);
+      border-radius: 10px; padding: 10px 14px; color: var(--text-primary); font-size: 0.95rem;
+    }
+    .form-agregar-ot input:focus { outline: none; border-color: var(--focus-ring); }
+    .btn-crear-ot {
+      background: var(--accent); color: var(--accent-text); border: none;
+      border-radius: 10px; padding: 10px 16px; font-weight: 700; cursor: pointer; white-space: nowrap;
+    }
+    .btn-crear-ot:hover { opacity: 0.9; }
+    .btn-abrir-agregar {
+      width: 100%; padding: 10px; border: 1.5px dashed var(--border-input);
+      border-radius: 10px; background: none; color: var(--accent); cursor: pointer;
+      font-size: 0.9rem; font-weight: 600;
+    }
+    .btn-abrir-agregar:hover { border-color: var(--accent); background: var(--accent-dim); }
+    .ot-selector-btn {
+      width: 100%; text-align: left; background: var(--bg-input);
+      border: 1px solid var(--border-input); border-radius: 10px;
+      padding: 10px 14px; color: var(--text-primary); cursor: pointer;
+      font-size: 0.95rem; transition: border-color 0.2s;
+    }
+    .ot-selector-btn:focus { outline: none; border-color: var(--focus-ring); }
+    .ot-selector-btn.vacio { color: var(--text-secondary); }
   </style>
 </head>
 <body>
@@ -615,6 +690,28 @@
   <!-- Toast -->
   <div id="toast"></div>
 
+  <!-- Modal selector de OT -->
+  <div id="modal-ot" class="modal-overlay" style="display:none" onclick="cerrarModalOTOverlay(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <span>Seleccionar OT</span>
+        <button class="modal-close" onclick="cerrarModalOT()">&times;</button>
+      </div>
+      <div class="modal-lista" id="ot-lista-items"></div>
+      <div class="modal-footer">
+        <div class="form-agregar-ot" id="form-agregar-ot" style="display:none">
+          <input type="text" id="nueva-ot-input" placeholder="N° de OT nueva" inputmode="numeric"
+            onkeydown="if(event.key==='Enter') confirmarAgregarOT()">
+          <button class="btn-crear-ot" onclick="confirmarAgregarOT()">Crear</button>
+        </div>
+        <button class="btn-abrir-agregar" id="btn-abrir-agregar" onclick="toggleFormAgregarOT()">
+          + Agregar OT
+        </button>
+      </div>
+    </div>
+  </div>
+
 <script>
   /* ── Config ──────────────────────────────────────────── */
   const SUPABASE_URL  = 'https://wgemrgxlvmakccznlerd.supabase.co';
@@ -691,7 +788,9 @@
         <div class="row-3 campo-taller" data-ot-row>
           <div class="field-group">
             <label>N° OT</label>
-            <input type="text" class="ot" placeholder="Ej: 1234" inputmode="numeric">
+            <input type="hidden" class="ot">
+            <button type="button" class="ot-selector-btn vacio"
+              onclick="abrirSelectorOT('${id}')">Seleccionar OT...</button>
           </div>
           <div class="field-group">
             <label>Hs. Trab.</label>
@@ -733,6 +832,147 @@
     actualizarConteo();
     actualizarTotales();
     renumerarEntradas();
+  }
+
+  /* ── OT: estado global ───────────────────────────────── */
+  let otAbiertas = [];
+  let entradaOTActual = null;
+
+  async function cargarOTs() {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/ordenes_trabajo?estado=eq.abierta&order=created_at.asc`,
+        { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` } }
+      );
+      if (!res.ok) throw new Error();
+      otAbiertas = await res.json();
+    } catch {
+      otAbiertas = [];
+    }
+  }
+
+  function abrirSelectorOT(entradaId) {
+    entradaOTActual = entradaId;
+    document.getElementById('form-agregar-ot').style.display = 'none';
+    document.getElementById('nueva-ot-input').value = '';
+    document.getElementById('btn-abrir-agregar').textContent = '+ Agregar OT';
+    renderListaOTs();
+    document.getElementById('modal-ot').style.display = 'flex';
+  }
+
+  function cerrarModalOT() {
+    document.getElementById('modal-ot').style.display = 'none';
+    entradaOTActual = null;
+  }
+
+  function cerrarModalOTOverlay(e) {
+    if (e.target === document.getElementById('modal-ot')) cerrarModalOT();
+  }
+
+  function renderListaOTs() {
+    const contenedor = document.getElementById('ot-lista-items');
+    if (otAbiertas.length === 0) {
+      contenedor.innerHTML = `<div class="ot-empty">No hay órdenes abiertas.<br>Usá "Agregar OT" para crear una.</div>`;
+      return;
+    }
+    contenedor.innerHTML = otAbiertas.map(ot => `
+      <div class="ot-item" onclick="seleccionarOTModal('${ot.numero_ot}')">
+        <div class="ot-item-info">
+          <div class="ot-item-num">OT ${ot.numero_ot}</div>
+          ${ot.descripcion ? `<div class="ot-item-sub">${ot.descripcion}</div>` : ''}
+        </div>
+        <div class="ot-item-check" onclick="event.stopPropagation()">
+          <input type="checkbox" class="ot-terminada-check" id="check-ot-${ot.numero_ot}"
+            onchange="cerrarOT('${ot.numero_ot}', this)">
+          <label for="check-ot-${ot.numero_ot}">¿Terminó<br>esta OT?</label>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function seleccionarOTModal(numeroOT) {
+    if (!entradaOTActual) return;
+    const entrada = document.getElementById(entradaOTActual);
+    if (!entrada) return;
+    const hidden  = entrada.querySelector('.ot');
+    const btn     = entrada.querySelector('.ot-selector-btn');
+    if (hidden) hidden.value = numeroOT;
+    if (btn) { btn.textContent = `OT ${numeroOT}`; btn.classList.remove('vacio'); }
+    cerrarModalOT();
+  }
+
+  async function cerrarOT(numeroOT, checkbox) {
+    checkbox.disabled = true;
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/ordenes_trabajo?numero_ot=eq.${encodeURIComponent(numeroOT)}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type':  'application/json',
+            'apikey':        SUPABASE_ANON,
+            'Authorization': `Bearer ${SUPABASE_ANON}`,
+            'Prefer':        'return=minimal',
+          },
+          body: JSON.stringify({ estado: 'cerrada', cerrada_at: new Date().toISOString() }),
+        }
+      );
+      if (!res.ok) throw new Error();
+      mostrarToast(`OT ${numeroOT} cerrada`, 'ok');
+      await cargarOTs();
+      renderListaOTs();
+      // Si alguna entrada tenía esta OT, limpiarla
+      document.querySelectorAll('.ot').forEach(inp => {
+        if (inp.value === numeroOT) {
+          inp.value = '';
+          const btn = inp.nextElementSibling;
+          if (btn) { btn.textContent = 'Seleccionar OT...'; btn.classList.add('vacio'); }
+        }
+      });
+    } catch {
+      mostrarToast('Error al cerrar OT', 'error');
+      checkbox.disabled = false;
+      checkbox.checked  = false;
+    }
+  }
+
+  function toggleFormAgregarOT() {
+    const form = document.getElementById('form-agregar-ot');
+    const btn  = document.getElementById('btn-abrir-agregar');
+    const visible = form.style.display !== 'none';
+    form.style.display = visible ? 'none' : 'flex';
+    btn.textContent = visible ? '+ Agregar OT' : '— Cancelar';
+    if (!visible) setTimeout(() => document.getElementById('nueva-ot-input').focus(), 50);
+  }
+
+  async function confirmarAgregarOT() {
+    const input  = document.getElementById('nueva-ot-input');
+    const numero = input.value.trim();
+    if (!numero) { mostrarToast('Ingresá un número de OT', 'error'); return; }
+    if (otAbiertas.some(o => o.numero_ot === numero)) {
+      mostrarToast('Esa OT ya existe', 'error'); return;
+    }
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/ordenes_trabajo`, {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'apikey':        SUPABASE_ANON,
+          'Authorization': `Bearer ${SUPABASE_ANON}`,
+          'Prefer':        'return=minimal',
+        },
+        body: JSON.stringify({ numero_ot: numero }),
+      });
+      if (!res.ok) throw new Error();
+      await cargarOTs();
+      input.value = '';
+      document.getElementById('form-agregar-ot').style.display = 'none';
+      document.getElementById('btn-abrir-agregar').textContent = '+ Agregar OT';
+      renderListaOTs();
+      seleccionarOTModal(numero);
+    } catch {
+      mostrarToast('Error al crear OT', 'error');
+    }
   }
 
   const TIPO_SIMPLE = ['Mantenimiento', 'Capacitacion'];
@@ -1020,6 +1260,7 @@
   document.getElementById('fecha').value  = hoyISO();
   actualizarBadgeCola();
   actualizarEstado();
+  cargarOTs();
   agregarEntrada();
 
   /* ── Chequeo de versión (auto-actualización) ─────────── */
